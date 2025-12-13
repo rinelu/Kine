@@ -1,0 +1,28 @@
+BasedOnStyle: Google
+
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+
+BreakBeforeBraces: Allman
+
+IndentCaseBlocks: false
+IndentCaseLabels: false
+IndentGotoLabels: false
+
+ColumnLimit: 120
+SpacesInParentheses: false
+SpaceAfterCStyleCast: true
+SpaceBeforeParens: ControlStatements
+SpaceBeforeRangeBasedForLoopColon: true
+
+PointerAlignment: Left
+ReferenceAlignment: Left
+
+SortIncludes: true
+IncludeBlocks: Preserve
+
+NamespaceIndentation: Inner
+
+Language: Cpp
+Standard: c++20
