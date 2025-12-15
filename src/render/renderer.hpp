@@ -13,6 +13,8 @@
 
 namespace kine
 {
+
+// Per-vertex data consumed by the main 2D shader
 struct Vertex
 {
     vec2 pos;        // Final quad vertex position (pixel space)
@@ -25,11 +27,18 @@ struct Vertex
     float type;      // 0 = sprite, 1 = rect, 2 = circle, 3 = line
 };
 
+/// Simple fullscreen triangle data for virtual-resolution blit
+struct BlitVertex
+{
+    vec2 pos;
+    vec2 uv;
+};
+
 enum class ScalingMode
 {
-    PixelPerfectInteger,
-    FreeScale,
-    LetterboxedAuto
+    PixelPerfectInteger,  // Integer upscale only (retro)
+    FreeScale,            // Stretch to window
+    LetterboxedAuto       // Preserve aspect ratio
 };
 
 class Renderer
@@ -58,53 +67,66 @@ class Renderer
 
    private:
     ResourceManager* resources = nullptr;
-    RenderList* list;
-    std::unique_ptr<RenderBatcher> batcher;
-
+    RenderList* render_list = nullptr;
     GLFWwindow* window = nullptr;
 
-    bool virtual_enabled = false;
+    // Batching
+    std::unique_ptr<RenderBatcher> batcher;
+    std::vector<Vertex> cpu_vertices;
+    GLuint current_texture = 0;
 
-    unsigned int virtual_fbo = 0;
-    unsigned int virtual_color = 0;
-    unsigned int virtual_rbo = 0;
+    static constexpr size_t MAX_VERTICES = 100'000;
+
+    // OpenGL objects
+    GLuint vao = 0;
+    GLuint vbo = 0;
+    GLuint shader = 0;
+
+    mat4 projection{1};
+
+    // Virtual resolution
+    bool virtual_enabled = false;
 
     int virtual_width = 0;
     int virtual_height = 0;
 
+    GLuint virtual_fbo = 0;
+    GLuint virtual_color = 0;
+    GLuint virtual_rbo = 0;
+
     ScalingMode scaling_mode = ScalingMode::LetterboxedAuto;
-    vec2 final_scale = {1, 1};
-    vec2 final_offset = {0, 0};
+    vec2 final_scale{1};
+    vec2 final_offset{0};
 
-    GLuint vao = 0;
-    GLuint vbo = 0;
-    GLuint ibo = 0;
-
-    GLuint current_texture = 0;
-
-    std::vector<Vertex> cpu_vertices;
-
+    // Blit pass
+    GLuint blit_vao = 0;
+    GLuint blit_vbo = 0;
     GLuint blit_shader = 0;
 
-    GLuint shader = 0;
-
-    mat4 projection;
-
-    static constexpr size_t MAX_VERTICES = 100000;
+    static constexpr BlitVertex blit_vertices[6] = {
+        {{-1.f, -1.f}, {0.f, 0.f}}, {{1.f, -1.f}, {1.f, 0.f}}, {{1.f, 1.f}, {1.f, 1.f}},
+        {{-1.f, -1.f}, {0.f, 0.f}}, {{1.f, 1.f}, {1.f, 1.f}},  {{-1.f, 1.f}, {0.f, 1.f}},
+    };
 
     void create_gl_objects();
     void destroy_gl_objects();
 
-    void begin_batch();
-    void flush_batch();
-    void push_quad(const Vertex& a, const Vertex& b, const Vertex& c, const Vertex& d);
+    void create_blit_objects();
+    void destroy_blit_objects();
 
     void draw_batches();
     void draw_batches_direct();
     void draw_batches_virtual();
 
-    void setup_projection_matrix();
-    void update_vao_layout();
+    void flush_cpu_vertices();
+
+    void setup_projection_matrix(int fbW, int fbH);
+
+    // Central quad generator used by all primitives
+    void push_quad(const Vertex& a, const Vertex& b, const Vertex& c, const Vertex& d);
+
+    void emit_quad(const vec2& position, const vec2& size, const vec2& origin, float rotation_rad, const vec4& color,
+                   float type, const vec2 uv[4]);
 };
 
 }  // namespace kine

@@ -1,5 +1,6 @@
 #include "window.hpp"
 #include <cstdlib>
+#include "glad/glad.h"
 #include "log.hpp"
 
 namespace kine
@@ -7,9 +8,10 @@ namespace kine
 
 Window::Window(int width, int height, const char* title)
 {
+    LOG_INFO("Window: initializing GLFW");
     if (!glfwInit())
     {
-        LOG_ERROR("Failed to initialize GLFW");
+        LOG_ERROR("Window: failed to initialize GLFW");
         std::abort();
     }
 
@@ -20,10 +22,10 @@ Window::Window(int width, int height, const char* title)
     glfwWindowHint(GLFW_FLOATING, GLFW_TRUE);
 
     window = glfwCreateWindow(width, height, title, nullptr, nullptr);
-    LOG_INFO("Creating GLFW window");
+    LOG_INFO("Window: creating GLFW window");
     if (!window)
     {
-        LOG_ERROR("Failed to create GLFW window");
+        LOG_ERROR("Window failed to create GLFW window");
         glfwTerminate();
         std::abort();
     }
@@ -33,10 +35,17 @@ Window::Window(int width, int height, const char* title)
 
     if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress))
     {
-        LOG_ERROR("Failed to load GLAD");
+        LOG_ERROR("Window: Failed to load GLAD");
         std::abort();
     }
 
+    glViewport(0, 0, width, height);
+    glfwSetFramebufferSizeCallback(window, update_viewport);
+}
+
+void Window::update_viewport(GLFWwindow* window, int width, int height)
+{
+    (void)window;
     glViewport(0, 0, width, height);
 }
 }  // namespace kine

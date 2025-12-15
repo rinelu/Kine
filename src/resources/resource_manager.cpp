@@ -11,7 +11,7 @@ namespace kine
 ResourceManager::ResourceManager()
 {
     search_dirs = {"assets/"};
-    extensions = {".vert", ".frag", ".glsl"};
+    extensions = {".vert", ".frag", ".glsl", ".png", ".jpg"};
 }
 
 void ResourceManager::init()
@@ -41,7 +41,7 @@ void ResourceManager::build()
 
         if (!fs::exists(root))
         {
-            LOG_WARN("ResourceManager: Directory not found: ", dir);
+            LOG_WARN("ResourceManager: ", dir, " not found");
             continue;
         }
 
@@ -58,8 +58,7 @@ void ResourceManager::build()
             // relative.replace_extension("");
 
             std::string key = relative.generic_string();
-            LOG_INFO("ResourceManager: Indexing : ", key);
-            if (file_index.contains(key)) LOG_WARN("ResourceManager: Duplicate asset key: ", key);
+            if (file_index.contains(key)) LOG_WARN("ResourceManager: ", key, " is duplicate asset key");
             file_index[key] = path.string();
         }
     }
@@ -68,7 +67,7 @@ void ResourceManager::build()
 const std::string& ResourceManager::get_path(const std::string& name) const
 {
     auto it = file_index.find(name);
-    if (it == file_index.end()) LOG_THROW(std::runtime_error, "ResourceManager: Resource not indexed: ", name);
+    if (it == file_index.end()) LOG_THROW(std::runtime_error, "ResourceManager: ", name, " not indexed");
 
     return it->second;
 }

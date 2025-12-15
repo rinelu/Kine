@@ -12,6 +12,9 @@ class Time
     float alpha = 0.0f;
 
     void begin_frame();
+
+   private:
+    float last_frame_time = 0.0f;
 };
 
 }  // namespace kine

@@ -14,6 +14,7 @@ class Window
     inline bool should_close() const { return glfwWindowShouldClose(window); }
 
    private:
+    static void update_viewport(GLFWwindow* window, int width, int height);
     GLFWwindow* window;
 };
 }  // namespace kine

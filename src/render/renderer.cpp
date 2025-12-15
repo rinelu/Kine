@@ -3,12 +3,20 @@
 #include <log.hpp>
 #include <memory>
 #include "GLFW/glfw3.h"
+#include "glad/glad.h"
+
+#define GL_CHECK()                                            \
+    do                                                        \
+    {                                                         \
+        GLenum err = glGetError();                            \
+        if (err != GL_NO_ERROR) LOG_ERROR("GL error: ", err); \
+    } while (0)
 
 namespace kine
 {
 
 Renderer::Renderer(ResourceManager* resourceManager, RenderList* _list, GLFWwindow* _window)
-    : resources(resourceManager), list(_list), window(_window)
+    : resources(resourceManager), render_list(_list), window(_window)
 {
     batcher = std::make_unique<RenderBatcher>(resourceManager);
 }
@@ -17,22 +25,32 @@ Renderer::~Renderer() { shutdown(); }
 
 void Renderer::init()
 {
-    auto s = resources->shaders().load("sprite", "shaders/sprite.vert", "shaders/sprite.frag");
-    shader = s.program;
-
-    glUseProgram(shader);
-    glUniform1i(glGetUniformLocation(shader, "uTexture"), 0);
+    auto screen = resources->shaders().load("screen", "shaders/screen.vert", "shaders/screen.frag");
+    shader = screen.program;
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     create_gl_objects();
-    setup_projection_matrix();
+
+    if (virtual_enabled)
+    {
+        auto blit = resources->shaders().load("blit", "shaders/blit.vert", "shaders/blit.frag");
+        blit_shader = blit.program;
+
+        create_blit_objects();
+        glUseProgram(blit_shader);
+        glUniform1i(glGetUniformLocation(blit_shader, "uTexture"), 0);
+    }
+
+    glUseProgram(shader);
+    glUniform1i(glGetUniformLocation(shader, "uTexture"), 0);
 }
 
 void Renderer::shutdown()
 {
     destroy_gl_objects();
+    destroy_blit_objects();
 
     if (virtual_enabled)
     {
@@ -55,11 +73,20 @@ void Renderer::end_frame() {}
 
 void Renderer::set_virtual_resolution(int width, int height)
 {
+    LOG_INFO("Renderer: enabling virtual resolution ", width, "x", height);
+
     if (virtual_enabled)
     {
+        LOG_TRACE("Renderer: destroying previous virtual framebuffer");
         glDeleteFramebuffers(1, &virtual_fbo);
         glDeleteTextures(1, &virtual_color);
         glDeleteRenderbuffers(1, &virtual_rbo);
+    }
+
+    if (width <= 0 || height <= 0)
+    {
+        LOG_ERROR("Renderer: invalid virtual resolution ", width, "x", height);
+        return;
     }
 
     virtual_width = width;
@@ -68,6 +95,7 @@ void Renderer::set_virtual_resolution(int width, int height)
 
     glGenFramebuffers(1, &virtual_fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, virtual_fbo);
+    GL_CHECK();
 
     // Texture
     glGenTextures(1, &virtual_color);
@@ -78,6 +106,7 @@ void Renderer::set_virtual_resolution(int width, int height)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, virtual_color, 0);
+    GL_CHECK();
 
     // Depth/stencil
     glGenRenderbuffers(1, &virtual_rbo);
@@ -86,7 +115,7 @@ void Renderer::set_virtual_resolution(int width, int height)
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, virtual_rbo);
 
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        LOG_WARN("virtual framebuffer incomplete!");
+        LOG_WARN("Renderer: virtual framebuffer incomplete!");
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
@@ -148,55 +177,48 @@ void Renderer::compute_virtual_scaling(int window_w, int window_h)
 
 void Renderer::render()
 {
-    batcher->build(list->get());
+    // begin_frame();
 
-    glUseProgram(shader);
-    glUniformMatrix4fv(glGetUniformLocation(shader, "uProjection"), 1, GL_FALSE, &projection[0][0]);
+    batcher->build(render_list->get());
 
     if (virtual_enabled)
         draw_batches_virtual();
     else
         draw_batches_direct();
 
+    end_frame();
     glfwSwapBuffers(window);
     glfwPollEvents();
 }
 
 void Renderer::create_gl_objects()
 {
+    LOG_INFO("Renderer: creating main VAO/VBO");
+
     glGenVertexArrays(1, &vao);
     glGenBuffers(1, &vbo);
 
     glBindVertexArray(vao);
+    GL_CHECK();
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    GL_CHECK();
     glBufferData(GL_ARRAY_BUFFER, MAX_VERTICES * sizeof(Vertex), nullptr, GL_DYNAMIC_DRAW);
 
-    // Vertex attributes layout
     GLuint attrib = 0;
-    // pos
-    glVertexAttribPointer(attrib, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*) offsetof(Vertex, pos));
-    glEnableVertexAttribArray(attrib++);
-    // uv
-    glVertexAttribPointer(attrib, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*) offsetof(Vertex, uv));
-    glEnableVertexAttribArray(attrib++);
-    // color
-    glVertexAttribPointer(attrib, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*) offsetof(Vertex, color));
-    glEnableVertexAttribArray(attrib++);
-    // origin
-    glVertexAttribPointer(attrib, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*) offsetof(Vertex, origin));
-    glEnableVertexAttribArray(attrib++);
-    // size
-    glVertexAttribPointer(attrib, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*) offsetof(Vertex, size));
-    glEnableVertexAttribArray(attrib++);
-    // misc
-    glVertexAttribPointer(attrib, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*) offsetof(Vertex, misc));
-    glEnableVertexAttribArray(attrib++);
-    // rotation
-    glVertexAttribPointer(attrib, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*) offsetof(Vertex, rotation));
-    glEnableVertexAttribArray(attrib++);
-    // type
-    glVertexAttribPointer(attrib, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*) offsetof(Vertex, type));
-    glEnableVertexAttribArray(attrib++);
+#define ATTR(count, type, member)                                                                           \
+    glVertexAttribPointer(attrib, count, type, GL_FALSE, sizeof(Vertex), (void*) offsetof(Vertex, member)); \
+    glEnableVertexAttribArray(attrib++)
+
+    ATTR(2, GL_FLOAT, pos);
+    ATTR(2, GL_FLOAT, uv);
+    ATTR(4, GL_FLOAT, color);
+    ATTR(2, GL_FLOAT, origin);
+    ATTR(2, GL_FLOAT, size);
+    ATTR(2, GL_FLOAT, misc);
+    ATTR(1, GL_FLOAT, rotation);
+    ATTR(1, GL_FLOAT, type);
+
+#undef ATTR
 
     glBindVertexArray(0);
 }
@@ -207,13 +229,48 @@ void Renderer::destroy_gl_objects()
     if (vao) glDeleteVertexArrays(1, &vao);
 }
 
-void Renderer::setup_projection_matrix()
+void Renderer::create_blit_objects()
 {
-    float w = float(virtual_width > 0 ? virtual_width : 800);
-    float h = float(virtual_height > 0 ? virtual_height : 600);
+    glGenVertexArrays(1, &blit_vao);
+    glGenBuffers(1, &blit_vbo);
 
-    // Top-left origin
-    projection = glm::ortho(0.0f, w, h, 0.0f, -1.0f, 1.0f);
+    glBindVertexArray(blit_vao);
+    glBindBuffer(GL_ARRAY_BUFFER, blit_vbo);
+
+    glBufferData(GL_ARRAY_BUFFER, sizeof(blit_vertices), blit_vertices, GL_STATIC_DRAW);
+
+    // vec2 position
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(BlitVertex), (void*) offsetof(BlitVertex, pos));
+    glEnableVertexAttribArray(0);
+
+    // vec2 UV
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(BlitVertex), (void*) offsetof(BlitVertex, uv));
+    glEnableVertexAttribArray(1);
+
+    glBindVertexArray(0);
+}
+
+void Renderer::destroy_blit_objects()
+{
+    if (blit_vbo)
+    {
+        glDeleteBuffers(1, &blit_vbo);
+        blit_vbo = 0;
+    }
+
+    if (blit_vao)
+    {
+        glDeleteVertexArrays(1, &blit_vao);
+        blit_vao = 0;
+    }
+}
+
+void Renderer::setup_projection_matrix(int fbW, int fbH)
+{
+    if (virtual_enabled)
+        projection = glm::ortho(0.0f, (float) virtual_width, (float) virtual_height, 0.0f, -1.0f, 1.0f);
+    else
+        projection = glm::ortho(0.0f, (float) fbW, (float) fbH, 0.0f, -1.0f, 1.0f);
 }
 
 void Renderer::push_quad(const Vertex& a, const Vertex& b, const Vertex& c, const Vertex& d)
@@ -257,195 +314,176 @@ void Renderer::draw_batches()
 
 void Renderer::draw_batches_direct()
 {
-    int W, H;
-    glfwGetFramebufferSize(window, &W, &H);
-    glViewport(0, 0, W, H);
+    int w, h;
+    glfwGetFramebufferSize(window, &w, &h);
+    glViewport(0, 0, w, h);
     glClearColor(0.04f, 0.04f, 0.06f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    float aspect = float(w) / float(h);
+    glUniform1f(glGetUniformLocation(shader, "uAspect"), aspect);
+
+    setup_projection_matrix(w, h);
+    glUniformMatrix4fv(glGetUniformLocation(shader, "uProjection"), 1, GL_FALSE, &projection[0][0]);
     draw_batches();
 
-    if (!cpu_vertices.empty())
-    {
-        glBindVertexArray(vao);
-        glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, cpu_vertices.size() * sizeof(Vertex), cpu_vertices.data());
-
-        glDrawArrays(GL_TRIANGLES, 0, cpu_vertices.size());
-        cpu_vertices.clear();
-    }
+    flush_cpu_vertices();
 }
 
 void Renderer::draw_batches_virtual()
 {
+    glDisable(GL_DEPTH_TEST);
     glBindFramebuffer(GL_FRAMEBUFFER, virtual_fbo);
-    draw_batches_direct();
+    GL_CHECK();
+    glViewport(0, 0, virtual_width, virtual_height);
 
-    // Blit FBO to screen
+    glUseProgram(shader);
+    float aspect = float(virtual_width) / float(virtual_height);
+    glUniform1f(glGetUniformLocation(shader, "uAspect"), aspect);
+
+    setup_projection_matrix(virtual_width, virtual_height);
+    glUniformMatrix4fv(glGetUniformLocation(shader, "uProjection"), 1, GL_FALSE, &projection[0][0]);
+
+    glClearColor(0.04f, 0.04f, 0.06f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    draw_batches();
+    flush_cpu_vertices();
+
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    int W, H;
-    glfwGetFramebufferSize(window, &W, &H);
-    compute_virtual_scaling(W, H);
-    glViewport(0, 0, W, H);
+    int w, h;
+    glfwGetFramebufferSize(window, &w, &h);
+    compute_virtual_scaling(w, h);
+
+    glViewport(0, 0, w, h);
     glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT);
 
     glUseProgram(blit_shader);
+    GLint scale_loc = glGetUniformLocation(blit_shader, "uFinalScale");
+    GLint offset_loc = glGetUniformLocation(blit_shader, "uFinalOffset");
+    GLint window_loc = glGetUniformLocation(blit_shader, "uWindowSize");
+    GLint virtual_size = glGetUniformLocation(blit_shader, "uVirtualSize");
+
+    glUniform2f(virtual_size, virtual_width, virtual_height);
+    glUniform2f(scale_loc, final_scale.x, final_scale.y);
+    glUniform2f(offset_loc, final_offset.x, final_offset.y);
+    glUniform2f(window_loc, (float) w, (float) h);
+
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, virtual_color);
 
-    // TODO: full-screen quad VAO for blit
+    glBindVertexArray(blit_vao);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+}
+
+void Renderer::flush_cpu_vertices()
+{
+    if (cpu_vertices.empty()) return;
+
+    if (cpu_vertices.size() > MAX_VERTICES)
+    {
+        LOG_ERROR("Renderer: cpu_vertices overflow: ", cpu_vertices.size());
+        cpu_vertices.clear();
+        return;
+    }
+
+    if (current_texture)
+        glBindTexture(GL_TEXTURE_2D, current_texture);
+    else
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+    glBindVertexArray(vao);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, cpu_vertices.size() * sizeof(Vertex), cpu_vertices.data());
+
+    GLsizei count = static_cast<GLsizei>(cpu_vertices.size());
+    if (count <= 0) return;
+
+    glDrawArrays(GL_TRIANGLES, 0, count);
+    GL_CHECK();
+
+    cpu_vertices.clear();
+}
+
+void Renderer::emit_quad(const vec2& position, const vec2& size, const vec2& origin, float rotation_rad,
+                         const vec4& color, float type, const vec2 uv[4])
+{
+    Vertex v[4]{};
+
+    vec2 p[4] = {
+        {-origin.x, -origin.y},
+        {size.x - origin.x, -origin.y},
+        {size.x - origin.x, size.y - origin.y},
+        {-origin.x, size.y - origin.y},
+    };
+
+    mat2 rot(glm::cos(rotation_rad), -glm::sin(rotation_rad), glm::sin(rotation_rad), glm::cos(rotation_rad));
+
+    for (int i = 0; i < 4; ++i)
+    {
+        v[i].pos = rot * p[i] + position;
+        v[i].uv = uv ? uv[i] : vec2(0);
+        v[i].color = color;
+        v[i].origin = origin;
+        v[i].size = size;
+        v[i].rotation = rotation_rad;
+        v[i].type = type;
+    }
+
+    push_quad(v[0], v[1], v[2], v[3]);
 }
 
 void Renderer::draw_sprite(const RenderCommand* cmd, const Texture2D* tex)
 {
     if (!tex) return;
 
-    Vertex v[4]{};
+    const vec2 size(cmd->width > 0 ? cmd->width : float(tex->width),
+                    cmd->height > 0 ? cmd->height : float(tex->height));
 
-    vec2 size(cmd->width > 0 ? cmd->width : float(tex->width), cmd->height > 0 ? cmd->height : float(tex->height));
-    vec2 origin = vec2(cmd->pivotX * size.x, cmd->pivotY * size.y);
-    vec4 color(cmd->color[0] / 255.f, cmd->color[1] / 255.f, cmd->color[2] / 255.f, cmd->color[3] / 255.f);
+    const vec2 origin(cmd->pivotX * size.x, cmd->pivotY * size.y);
+    const float rot = glm::radians(cmd->rotation);
 
-    // positions relative to pivot
-    vec2 p0(-origin.x, -origin.y);
-    vec2 p1(size.x - origin.x, -origin.y);
-    vec2 p2(size.x - origin.x, size.y - origin.y);
-    vec2 p3(-origin.x, size.y - origin.y);
+    const vec4 color(cmd->color[0] / 255.f, cmd->color[1] / 255.f, cmd->color[2] / 255.f, cmd->color[3] / 255.f);
 
-    // rotation
-    float rad = glm::radians(cmd->rotation);
-    mat2 rot = mat2(glm::cos(rad), -glm::sin(rad), glm::sin(rad), glm::cos(rad));
+    const vec2 uvs[4] = {{0, 0}, {1, 0}, {1, 1}, {0, 1}};
 
-    p0 = rot * p0 + vec2(cmd->x, cmd->y);
-    p1 = rot * p1 + vec2(cmd->x, cmd->y);
-    p2 = rot * p2 + vec2(cmd->x, cmd->y);
-    p3 = rot * p3 + vec2(cmd->x, cmd->y);
-
-    v[0].pos = p0;
-    v[1].pos = p1;
-    v[2].pos = p2;
-    v[3].pos = p3;
-    v[0].uv = vec2(0, 0);
-    v[1].uv = vec2(1, 0);
-    v[2].uv = vec2(1, 1);
-    v[3].uv = vec2(0, 1);
-    v[0].color = v[1].color = v[2].color = v[3].color = color;
-    v[0].origin = v[1].origin = v[2].origin = v[3].origin = origin;
-    v[0].size = v[1].size = v[2].size = v[3].size = size;
-    v[0].rotation = v[1].rotation = v[2].rotation = v[3].rotation = rad;
-    v[0].type = v[1].type = v[2].type = v[3].type = 0.f;  // sprite
-
-    push_quad(v[0], v[1], v[2], v[3]);
+    emit_quad({cmd->x, cmd->y}, size, origin, rot, color,
+              0.f,  // sprite
+              uvs);
 }
 
 void Renderer::draw_rect(const RenderCommand* cmd)
 {
-    Vertex v[4]{};
-    vec2 size(cmd->width, cmd->height);
-    vec2 origin = vec2(cmd->pivotX * size.x, cmd->pivotY * size.y);
     vec4 color(cmd->color[0] / 255.f, cmd->color[1] / 255.f, cmd->color[2] / 255.f, cmd->color[3] / 255.f);
-
-    vec2 p0(-origin.x, -origin.y);
-    vec2 p1(size.x - origin.x, -origin.y);
-    vec2 p2(size.x - origin.x, size.y - origin.y);
-    vec2 p3(-origin.x, size.y - origin.y);
-
-    float rad = glm::radians(cmd->rotation);
-    mat2 rot = mat2(glm::cos(rad), -glm::sin(rad), glm::sin(rad), glm::cos(rad));
-
-    p0 = rot * p0 + vec2(cmd->x, cmd->y);
-    p1 = rot * p1 + vec2(cmd->x, cmd->y);
-    p2 = rot * p2 + vec2(cmd->x, cmd->y);
-    p3 = rot * p3 + vec2(cmd->x, cmd->y);
-
-    v[0].pos = p0;
-    v[1].pos = p1;
-    v[2].pos = p2;
-    v[3].pos = p3;
-    v[0].uv = v[1].uv = v[2].uv = v[3].uv = vec2(0.f);
-    v[0].color = v[1].color = v[2].color = v[3].color = color;
-    v[0].origin = v[1].origin = v[2].origin = v[3].origin = origin;
-    v[0].size = v[1].size = v[2].size = v[3].size = size;
-    v[0].rotation = v[1].rotation = v[2].rotation = v[3].rotation = rad;
-    v[0].type = v[1].type = v[2].type = v[3].type = 1.f;  // rect
-
-    push_quad(v[0], v[1], v[2], v[3]);
+    emit_quad({cmd->x, cmd->y}, {cmd->width, cmd->height}, {cmd->pivotX * cmd->width, cmd->pivotY * cmd->height},
+              glm::radians(cmd->rotation), color,
+              1.f,  // rect
+              nullptr);
 }
 
 void Renderer::draw_circle(const RenderCommand* cmd)
 {
-    Vertex v[4]{};
-    float radius = cmd->radius;
-    vec2 size(radius * 2.f);
-    vec2 origin(radius, radius);
     vec4 color(cmd->color[0] / 255.f, cmd->color[1] / 255.f, cmd->color[2] / 255.f, cmd->color[3] / 255.f);
+    const glm::vec2 uvs[4] = {vec2{0}, {1, 0}, {1, 1}, {0, 1}};
 
-    vec2 p0(-origin.x, -origin.y);
-    vec2 p1(size.x - origin.x, -origin.y);
-    vec2 p2(size.x - origin.x, size.y - origin.y);
-    vec2 p3(-origin.x, size.y - origin.y);
-
-    float rad = glm::radians(cmd->rotation);
-    mat2 rot = mat2(glm::cos(rad), -glm::sin(rad), glm::sin(rad), glm::cos(rad));
-
-    p0 = rot * p0 + vec2(cmd->x, cmd->y);
-    p1 = rot * p1 + vec2(cmd->x, cmd->y);
-    p2 = rot * p2 + vec2(cmd->x, cmd->y);
-    p3 = rot * p3 + vec2(cmd->x, cmd->y);
-
-    v[0].pos = p0;
-    v[1].pos = p1;
-    v[2].pos = p2;
-    v[3].pos = p3;
-    v[0].uv = vec2(0, 0);
-    v[1].uv = vec2(1, 0);
-    v[2].uv = vec2(1, 1);
-    v[3].uv = vec2(0, 1);
-    v[0].color = v[1].color = v[2].color = v[3].color = color;
-    v[0].origin = v[1].origin = v[2].origin = v[3].origin = origin;
-    v[0].size = v[1].size = v[2].size = v[3].size = size;
-    v[0].rotation = v[1].rotation = v[2].rotation = v[3].rotation = rad;
-    v[0].type = v[1].type = v[2].type = v[3].type = 2.f;  // circle
-
-    push_quad(v[0], v[1], v[2], v[3]);
+    emit_quad({cmd->x, cmd->y}, vec2{cmd->radius * 2.f}, {cmd->radius, cmd->radius}, glm::radians(cmd->rotation), color,
+              2.f,  // circle
+              uvs);
 }
 
 void Renderer::draw_line(const RenderCommand* cmd)
 {
-    Vertex v[4]{};
     vec2 delta(cmd->x2 - cmd->x, cmd->y2 - cmd->y);
     float length = glm::length(delta);
-    vec2 size(length, cmd->radius * 2.f);
-    vec2 origin(0.f, cmd->radius);
     vec4 color(cmd->color[0] / 255.f, cmd->color[1] / 255.f, cmd->color[2] / 255.f, cmd->color[3] / 255.f);
 
     float angle = std::atan2(delta.y, delta.x);
-    mat2 rot = mat2(glm::cos(angle), -glm::sin(angle), glm::sin(angle), glm::cos(angle));
 
-    vec2 p0(0.f, -origin.y);
-    vec2 p1(size.x, -origin.y);
-    vec2 p2(size.x, origin.y);
-    vec2 p3(0.f, origin.y);
-
-    p0 = rot * p0 + vec2(cmd->x, cmd->y);
-    p1 = rot * p1 + vec2(cmd->x, cmd->y);
-    p2 = rot * p2 + vec2(cmd->x, cmd->y);
-    p3 = rot * p3 + vec2(cmd->x, cmd->y);
-
-    v[0].pos = p0;
-    v[1].pos = p1;
-    v[2].pos = p2;
-    v[3].pos = p3;
-    v[0].uv = v[1].uv = v[2].uv = v[3].uv = vec2(0.f);
-    v[0].color = v[1].color = v[2].color = v[3].color = color;
-    v[0].origin = v[1].origin = v[2].origin = v[3].origin = origin;
-    v[0].size = v[1].size = v[2].size = v[3].size = size;
-    v[0].rotation = v[1].rotation = v[2].rotation = v[3].rotation = 0.f;
-    v[0].type = v[1].type = v[2].type = v[3].type = 3.f;  // line
-
-    push_quad(v[0], v[1], v[2], v[3]);
+    emit_quad({cmd->x, cmd->y}, {length, cmd->radius * 2.f}, {0.f, cmd->radius}, angle, color,
+              3.f,  // line
+              nullptr);
 }
 
 }  // namespace kine

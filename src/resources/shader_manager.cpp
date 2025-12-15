@@ -43,7 +43,7 @@ Shader& ShaderManager::get(const std::string& name) { return shaders.at(name); }
 std::string ShaderManager::read_file(const std::string& path)
 {
     std::ifstream file(path);
-    if (!file) LOG_THROW(std::runtime_error, "ShaderManager: Failed to open shader: ", path);
+    if (!file) LOG_THROW(std::runtime_error, "ShaderManager: Failed to open shader ", path);
 
     std::stringstream ss;
     ss << file.rdbuf();

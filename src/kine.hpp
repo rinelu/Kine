@@ -19,14 +19,15 @@ class KineEngine
     KineEngine();
     ~KineEngine();
 
-    void init();
+    void init(int width, int height, const char* title);
     void shutdown();
     void begin_frame();
     void update();
     void render_frame();
 
-    float deltaTime() const { return time->dt; }
-    FlowTree& flow_tree() { return *flow; }
+    inline float delta_time() const { return time->dt; }
+    inline Renderer* get_renderer() const { return renderer.get(); };
+    // inline FlowTree& flow_tree() { return *flow; }
 
    private:
     std::unique_ptr<Time> time;
