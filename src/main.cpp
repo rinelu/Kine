@@ -2,9 +2,9 @@
 
 int main(void)
 {
-    KineEngine engine;
-    engine.init(1280, 720, "Test");
-    // engine.get_renderer()->set_virtual_resolution(640, 380);
+    KineEngine engine = {1280, 720, "Test"};
+    engine.get_renderer()->set_virtual_resolution(640, 380);
+    engine.init();
 
     while (engine.running)
     {

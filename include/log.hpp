@@ -149,7 +149,7 @@ class Log
         std::ostringstream msg;
         (msg << ... << std::forward<Args>(args));
 
-        std::cout << level_color(lvl) << "[" << std::put_time(&tm, "%H:%M:%S") << "] " << level_name(lvl) << "\033[0m "
+        std::cout << level_color(lvl) << "[" << std::put_time(&tm, "%H:%M:%S") << "] " << level_name(lvl) << " "
                   << msg.str();
 
 #ifndef NDEBUG

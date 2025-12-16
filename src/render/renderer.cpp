@@ -77,7 +77,6 @@ void Renderer::set_virtual_resolution(int width, int height)
 
     if (virtual_enabled)
     {
-        LOG_TRACE("Renderer: destroying previous virtual framebuffer");
         glDeleteFramebuffers(1, &virtual_fbo);
         glDeleteTextures(1, &virtual_color);
         glDeleteRenderbuffers(1, &virtual_rbo);
@@ -95,8 +94,9 @@ void Renderer::set_virtual_resolution(int width, int height)
 
     glGenFramebuffers(1, &virtual_fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, virtual_fbo);
-    GL_CHECK();
+    // GL_CHECK();
 
+    LOG_TRACE("GL context when creating FBO = ", glfwGetCurrentContext());
     // Texture
     glGenTextures(1, &virtual_color);
     glBindTexture(GL_TEXTURE_2D, virtual_color);
@@ -106,7 +106,7 @@ void Renderer::set_virtual_resolution(int width, int height)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, virtual_color, 0);
-    GL_CHECK();
+    // GL_CHECK();
 
     // Depth/stencil
     glGenRenderbuffers(1, &virtual_rbo);
@@ -199,9 +199,9 @@ void Renderer::create_gl_objects()
     glGenBuffers(1, &vbo);
 
     glBindVertexArray(vao);
-    GL_CHECK();
+    // GL_CHECK();
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    GL_CHECK();
+    // GL_CHECK();
     glBufferData(GL_ARRAY_BUFFER, MAX_VERTICES * sizeof(Vertex), nullptr, GL_DYNAMIC_DRAW);
 
     GLuint attrib = 0;
@@ -334,7 +334,7 @@ void Renderer::draw_batches_virtual()
 {
     glDisable(GL_DEPTH_TEST);
     glBindFramebuffer(GL_FRAMEBUFFER, virtual_fbo);
-    GL_CHECK();
+    // GL_CHECK();
     glViewport(0, 0, virtual_width, virtual_height);
 
     glUseProgram(shader);
@@ -395,14 +395,12 @@ void Renderer::flush_cpu_vertices()
         glBindTexture(GL_TEXTURE_2D, 0);
 
     glBindVertexArray(vao);
+    // GL_CHECK();
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferSubData(GL_ARRAY_BUFFER, 0, cpu_vertices.size() * sizeof(Vertex), cpu_vertices.data());
 
-    GLsizei count = static_cast<GLsizei>(cpu_vertices.size());
-    if (count <= 0) return;
-
-    glDrawArrays(GL_TRIANGLES, 0, count);
-    GL_CHECK();
+    glDrawArrays(GL_TRIANGLES, 0, cpu_vertices.size());
+    // GL_CHECK();
 
     cpu_vertices.clear();
 }

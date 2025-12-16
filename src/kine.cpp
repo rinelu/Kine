@@ -1,10 +1,7 @@
 #include "kine.hpp"
 #include <memory>
 
-KineEngine::KineEngine() = default;
-KineEngine::~KineEngine() = default;
-
-void KineEngine::init(int width, int height, const char* title)
+KineEngine::KineEngine(int width, int height, const char* title)
 {
     time = std::make_unique<Time>();
     ecs.create();
@@ -16,7 +13,11 @@ void KineEngine::init(int width, int height, const char* title)
 
     ecs.set_context<RenderList&>(*render_list);
     ecs.set_context<ResourceManager&>(*resourceManager);
+}
+KineEngine::~KineEngine() = default;
 
+void KineEngine::init()
+{
     resourceManager->init();
     renderer->init();
     running = true;
@@ -28,16 +29,9 @@ void KineEngine::begin_frame()
     if (window->should_close()) running = false;
 }
 
-void KineEngine::update()
-{
+void KineEngine::update() {}
 
-}
-
-void KineEngine::render_frame()
-{
-    renderer->render();
-}
-
+void KineEngine::render_frame() { renderer->render(); }
 
 void KineEngine::shutdown()
 {

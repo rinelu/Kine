@@ -16,10 +16,10 @@ class KineEngine
     bool running = false;
     ECS ecs;
 
-    KineEngine();
+    KineEngine(int width, int height, const char* title);
     ~KineEngine();
 
-    void init(int width, int height, const char* title);
+    void init();
     void shutdown();
     void begin_frame();
     void update();
