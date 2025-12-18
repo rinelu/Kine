@@ -18,6 +18,7 @@ void ResourceManager::init()
 {
     build();
 
+    texture_manager = new TextureManager(*this);
     shader_manager = new ShaderManager(*this);
 
     LOG_INFO("ResourceManager: Indexed ", file_index.size(), " files");
@@ -72,6 +73,7 @@ const std::string& ResourceManager::get_path(const std::string& name) const
     return it->second;
 }
 
+TextureManager& ResourceManager::textures() { return *texture_manager; }
 ShaderManager& ResourceManager::shaders() { return *shader_manager; }
 
 }  // namespace kine

@@ -320,13 +320,13 @@ void Renderer::draw_batches_direct()
     glClearColor(0.04f, 0.04f, 0.06f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    // glUseProgram(shader);
     float aspect = float(w) / float(h);
     glUniform1f(glGetUniformLocation(shader, "uAspect"), aspect);
 
     setup_projection_matrix(w, h);
     glUniformMatrix4fv(glGetUniformLocation(shader, "uProjection"), 1, GL_FALSE, &projection[0][0]);
     draw_batches();
-
     flush_cpu_vertices();
 }
 
@@ -336,6 +336,8 @@ void Renderer::draw_batches_virtual()
     glBindFramebuffer(GL_FRAMEBUFFER, virtual_fbo);
     // GL_CHECK();
     glViewport(0, 0, virtual_width, virtual_height);
+    glClearColor(0.04f, 0.04f, 0.06f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glUseProgram(shader);
     float aspect = float(virtual_width) / float(virtual_height);
@@ -343,10 +345,6 @@ void Renderer::draw_batches_virtual()
 
     setup_projection_matrix(virtual_width, virtual_height);
     glUniformMatrix4fv(glGetUniformLocation(shader, "uProjection"), 1, GL_FALSE, &projection[0][0]);
-
-    glClearColor(0.04f, 0.04f, 0.06f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
     draw_batches();
     flush_cpu_vertices();
 
@@ -389,11 +387,8 @@ void Renderer::flush_cpu_vertices()
         return;
     }
 
-    if (current_texture)
-        glBindTexture(GL_TEXTURE_2D, current_texture);
-    else
-        glBindTexture(GL_TEXTURE_2D, 0);
-
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, current_texture ? current_texture : 0);
     glBindVertexArray(vao);
     // GL_CHECK();
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
@@ -417,7 +412,7 @@ void Renderer::emit_quad(const vec2& position, const vec2& size, const vec2& ori
         {-origin.x, size.y - origin.y},
     };
 
-    mat2 rot(glm::cos(rotation_rad), -glm::sin(rotation_rad), glm::sin(rotation_rad), glm::cos(rotation_rad));
+    mat2 rot(glm::cos(rotation_rad), glm::sin(rotation_rad), -glm::sin(rotation_rad), glm::cos(rotation_rad));
 
     for (int i = 0; i < 4; ++i)
     {
@@ -436,15 +431,13 @@ void Renderer::emit_quad(const vec2& position, const vec2& size, const vec2& ori
 void Renderer::draw_sprite(const RenderCommand* cmd, const Texture2D* tex)
 {
     if (!tex) return;
+    current_texture = tex->id;
 
-    const vec2 size(cmd->width > 0 ? cmd->width : float(tex->width),
-                    cmd->height > 0 ? cmd->height : float(tex->height));
+    const vec2 size(float(tex->width), float(tex->height));
 
     const vec2 origin(cmd->pivotX * size.x, cmd->pivotY * size.y);
     const float rot = glm::radians(cmd->rotation);
-
     const vec4 color(cmd->color[0] / 255.f, cmd->color[1] / 255.f, cmd->color[2] / 255.f, cmd->color[3] / 255.f);
-
     const vec2 uvs[4] = {{0, 0}, {1, 0}, {1, 1}, {0, 1}};
 
     emit_quad({cmd->x, cmd->y}, size, origin, rot, color,

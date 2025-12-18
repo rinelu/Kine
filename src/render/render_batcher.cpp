@@ -1,6 +1,5 @@
 #include "render_batcher.hpp"
 #include "../resources/resource_manager.hpp"
-#include "log.hpp"
 
 #include <algorithm>
 
@@ -37,8 +36,8 @@ void RenderBatcher::build(const std::vector<RenderCommand>& commands)
         {
             // Resolve texture name to Texture2D*
             // ResourceManager returns Texture2D&,
-            // auto& texture = resource_manager->get_texture(cmd->texture_name);
-            // texture_ptr = static_cast<void*>(&texture);
+            auto& texture = resource_manager->textures().get(cmd->texture_name);
+            texture_ptr = static_cast<void*>(&texture);
         }
 
         // Create new batch if necessary

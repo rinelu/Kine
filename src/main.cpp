@@ -24,7 +24,7 @@ int main(void)
         list.add_rect(vec2(50, 50), vec2(1180, 100), {0, 100, 200, 255}, 1, 1); 
 
         // Smaller Red Data Box
-        list.add_rect(vec2(50, 200), vec2(300, 450), {200, 0, 0, 255}, 1, 1); 
+        list.add_sprite("error", vec2(300, 450), 0, {0,0}); 
 
         // Central Green Circle (Radius 100)
         list.add_circle(vec2(640, 360), 100.0f, {0, 255, 0, 255}, 1, 2); 
