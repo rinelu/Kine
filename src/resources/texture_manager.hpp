@@ -17,6 +17,7 @@ class TextureManager
 
     Texture2D& load(const std::string& name, const std::string& file);
     Texture2D& get(const std::string& name);
+    Texture2D& add(const std::string& name, Texture2D&& tex);
 
    private:
     Texture2D* error_texture = nullptr;
@@ -25,6 +26,7 @@ class TextureManager
 
     ResourceManager& resources;
     std::unordered_map<std::string, Texture2D> textures;
+
 };
 
 }  // namespace kine

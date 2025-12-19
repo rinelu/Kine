@@ -9,10 +9,12 @@ class ResourceManager;
 
 struct RenderBatch
 {
-    void* texture{nullptr};
-
+    int32_t layer;
+    RenderType type;
+    Texture2D* texture;
     std::vector<const RenderCommand*> commands;
 };
+;
 
 // Groups render commands into texture-based batches.
 class RenderBatcher

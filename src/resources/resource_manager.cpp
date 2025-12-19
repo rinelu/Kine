@@ -11,7 +11,7 @@ namespace kine
 ResourceManager::ResourceManager()
 {
     search_dirs = {"assets/"};
-    extensions = {".vert", ".frag", ".glsl", ".png", ".jpg"};
+    extensions = {".vert", ".frag", ".glsl", ".png", ".jpg", ".ttf"};
 }
 
 void ResourceManager::init()
@@ -20,6 +20,7 @@ void ResourceManager::init()
 
     texture_manager = new TextureManager(*this);
     shader_manager = new ShaderManager(*this);
+    font_manager = new FontManager(*this);
 
     LOG_INFO("ResourceManager: Indexed ", file_index.size(), " files");
 }
@@ -59,6 +60,7 @@ void ResourceManager::build()
             // relative.replace_extension("");
 
             std::string key = relative.generic_string();
+            LOG_TRACE("ResourceManager: Indexing ", key);
             if (file_index.contains(key)) LOG_WARN("ResourceManager: ", key, " is duplicate asset key");
             file_index[key] = path.string();
         }
@@ -75,5 +77,6 @@ const std::string& ResourceManager::get_path(const std::string& name) const
 
 TextureManager& ResourceManager::textures() { return *texture_manager; }
 ShaderManager& ResourceManager::shaders() { return *shader_manager; }
+FontManager& ResourceManager::fonts() { return *font_manager; }
 
 }  // namespace kine

@@ -4,6 +4,7 @@
 #include <vector>
 #include "resources/texture_manager.hpp"
 #include "shader_manager.hpp"
+#include "font_manager.hpp"
 
 namespace kine
 {
@@ -18,6 +19,7 @@ public:
 
     TextureManager& textures();
     ShaderManager& shaders();
+    FontManager& fonts();
 
     const std::string& get_path(const std::string& name) const;
 
@@ -31,6 +33,7 @@ private:
 
     TextureManager* texture_manager = nullptr;
     ShaderManager* shader_manager = nullptr;
+    FontManager* font_manager = nullptr;
 };
 
 } // namespace kine

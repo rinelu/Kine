@@ -34,6 +34,8 @@ Texture2D& TextureManager::get(const std::string& name)
     return *error_texture;
 }
 
+Texture2D& TextureManager::add(const std::string& name, Texture2D&& tex) { return textures[name] = std::move(tex); }
+
 Texture2D TextureManager::load_from_file(const std::string& name, const std::string& path)
 {
     Texture2D tex;

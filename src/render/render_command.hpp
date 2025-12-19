@@ -2,6 +2,7 @@
 #include <array>
 #include <cstdint>
 #include <string>
+#include "font.hpp"
 
 namespace kine
 {
@@ -11,13 +12,17 @@ enum class RenderType : uint8_t
     Sprite,
     Rect,
     Circle,
-    Line
+    Line,
+    Text,
 };
 
 struct RenderCommand
 {
     RenderType type{RenderType::Sprite};
     int32_t layer{0};
+
+    std::string text{};
+    Font* font{};
 
     std::string texture_name{};
 

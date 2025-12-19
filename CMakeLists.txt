@@ -4,6 +4,14 @@ project(Kine LANGUAGES C CXX)
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
     set(BUILD_SHARED_LIBS OFF)
     message(STATUS "Release build: STATIC linking enabled")
+
+    if (UNIX AND NOT APPLE)
+        target_link_options(Kine PRIVATE
+            -static
+            -static-libgcc
+            -static-libstdc++
+        )
+    endif()
 else()
     set(BUILD_SHARED_LIBS ON)
     message(STATUS "Debug build: DYNAMIC linking enabled")
@@ -19,6 +27,11 @@ set(EXTERNAL_DIR ${CMAKE_SOURCE_DIR}/external)
 set(GLFW_DIR         ${EXTERNAL_DIR}/glfw)
 set(GLFW_INCLUDE_DIR ${GLFW_DIR}/include)
 set(GLFW_LIB_DIR     ${GLFW_DIR}/lib)
+
+# FreeType
+set(FT_DIR         ${EXTERNAL_DIR}/freetype)
+set(FT_INCLUDE_DIR ${FT_DIR}/include)
+set(FT_LIB_DIR     ${FT_DIR}/lib)
 
 # Glad
 set(GLAD_INCLUDE_DIR ${EXTERNAL_DIR}/glad/include)
@@ -41,6 +54,7 @@ set(LUA_LIB_DIR            ${EXTERNAL_DIR}/lua/lib)
 include_directories(
     ${GLAD_INCLUDE_DIR}
     ${GLFW_INCLUDE_DIR}
+    ${FT_INCLUDE_DIR}
     ${IMGUI_INCLUDE_DIR}
     ${RLIMGUI_INCLUDE_DIR}
     ${GLM_INCLUDE_DIR}
@@ -68,11 +82,13 @@ add_executable(Kine ${KINE_SOURCES})
 target_include_directories(Kine PRIVATE
     ${GLFW_INCLUDE_DIR}
     ${ENTT_INCLUDE_DIR}
+    ${FT_INCLUDE_DIR}
     "${CMAKE_SOURCE_DIR}/src"
 )
 
 target_link_directories(Kine PRIVATE
     ${GLFW_LIB_DIR}
+    ${FT_LIB_DIR}
     ${LUA_LIB_DIR}
 )
 
@@ -81,6 +97,11 @@ target_sources(Kine PRIVATE $<TARGET_OBJECTS:glad>)
 target_link_libraries(Kine PRIVATE
     glad
     glfw
+    freetype
+    brotlidec
+    brotlicommon
+    z
+    png
     lua
     # entt::entt
 )

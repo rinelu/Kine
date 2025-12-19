@@ -18,19 +18,19 @@ float sdRoundedBox(vec2 p, vec2 b, float r)
 
 void main()
 {
-    if (vType < 0.5)
+    if (vType == 0)
     {
         FragColor = texture(uTexture, vUV) * vColor;
         return;
     }
 
-    if (vType < 1.5)
+    if (vType == 5)
     {
         FragColor = vColor;
         return;
     }
 
-    if (vType < 2.5)
+    if (vType == 2)
     {
         vec2 p = vUV - 0.5;
         vec2 px = p * vSize;
@@ -42,7 +42,7 @@ void main()
         return;
     }
     
-    if (vType < 3.5)
+    if (vType == 3)
     {
         vec2 p = vUV - 0.5;
         vec2 px = p * vSize;
@@ -54,6 +54,12 @@ void main()
         
         FragColor = vec4(vColor.rgb, vColor.a * alpha);
         
+        return;
+    }
+
+    if (vType == 4) {
+        float a = texture(uTexture, vUV).r;
+        FragColor = vec4(vColor.rgb, vColor.a * a);
         return;
     }
 

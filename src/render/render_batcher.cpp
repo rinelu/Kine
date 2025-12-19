@@ -1,10 +1,12 @@
 #include "render_batcher.hpp"
+
 #include "../resources/resource_manager.hpp"
 
 #include <algorithm>
 
 namespace kine
 {
+
 RenderBatcher::RenderBatcher(ResourceManager* resources) : resource_manager(resources)
 {
     sorted.reserve(2048);
@@ -16,43 +18,64 @@ void RenderBatcher::build(const std::vector<RenderCommand>& commands)
     sorted.clear();
     batches.clear();
 
-    // Point sorted to existing commands
-    for (const auto& cmd : commands) sorted.push_back(&cmd);
+    // Collect pointers (no copying of commands)
+    for (const RenderCommand& cmd : commands) sorted.push_back(&cmd);
 
-    // Deterministic stable sort by layer
+    // Sort deterministically: layer -> type -> texture pointer
     std::stable_sort(sorted.begin(), sorted.end(),
-                     [](const RenderCommand* a, const RenderCommand* b) { return a->layer < b->layer; });
+                     [this](const RenderCommand* a, const RenderCommand* b)
+                     {
+                         if (a->layer != b->layer) return a->layer < b->layer;
 
-    // Group by texture name
-    // Hash map ensures one batch per texture
-    std::unordered_map<void*, size_t> batch_map;
-    batch_map.reserve(64);
+                         if (a->type != b->type) return a->type < b->type;
+
+                         Texture2D* ta = nullptr;
+                         Texture2D* tb = nullptr;
+
+                         if (a->type == RenderType::Sprite)
+                             ta = &resource_manager->textures().get(a->texture_name);
+                         else if (a->type == RenderType::Text && a->font)
+                             ta = a->font->texture;
+
+                         if (b->type == RenderType::Sprite)
+                             tb = &resource_manager->textures().get(b->texture_name);
+                         else if (b->type == RenderType::Text && b->font)
+                             tb = b->font->texture;
+
+                         return ta < tb;
+                     });
+
+    RenderBatch* current = nullptr;
 
     for (const RenderCommand* cmd : sorted)
     {
-        void* texture_ptr = nullptr;
+        Texture2D* texture = nullptr;
 
-        if (cmd->type == RenderType::Sprite)
+        switch (cmd->type)
         {
-            // Resolve texture name to Texture2D*
-            // ResourceManager returns Texture2D&,
-            auto& texture = resource_manager->textures().get(cmd->texture_name);
-            texture_ptr = static_cast<void*>(&texture);
+        case RenderType::Sprite:
+            texture = &resource_manager->textures().get(cmd->texture_name);
+            break;
+
+        case RenderType::Text:
+            texture = cmd->font ? cmd->font->texture : nullptr;
+            break;
+
+        default:
+            texture = nullptr;  // Rect / Line / Circle
+            break;
         }
 
-        // Create new batch if necessary
-        if (!batch_map.contains(texture_ptr))
-        {
-            const size_t size = batches.size();
-            batch_map[texture_ptr] = size;
+        const bool start_new_batch =
+            !current || current->layer != cmd->layer || current->type != cmd->type || current->texture != texture;
 
-            RenderBatch newBatch;
-            newBatch.texture = texture_ptr;
-            batches.push_back(newBatch);
+        if (start_new_batch)
+        {
+            batches.push_back(RenderBatch{.layer = cmd->layer, .type = cmd->type, .texture = texture, .commands = {}});
+            current = &batches.back();
         }
 
-        size_t batch = batch_map[texture_ptr];
-        batches[batch].commands.push_back(cmd);
+        current->commands.push_back(cmd);
     }
 }
 

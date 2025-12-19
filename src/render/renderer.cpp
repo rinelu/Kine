@@ -307,6 +307,9 @@ void Renderer::draw_batches()
             case RenderType::Line:
                 draw_line(cmd);
                 break;
+            case RenderType::Text:
+                draw_text(cmd);
+                break;
             }
         }
     }
@@ -400,6 +403,13 @@ void Renderer::flush_cpu_vertices()
     cpu_vertices.clear();
 }
 
+void Renderer::set_texture(GLuint texture)
+{
+    if (current_texture == texture) return;
+    flush_cpu_vertices();
+    current_texture = texture;
+}
+
 void Renderer::emit_quad(const vec2& position, const vec2& size, const vec2& origin, float rotation_rad,
                          const vec4& color, float type, const vec2 uv[4])
 {
@@ -431,14 +441,14 @@ void Renderer::emit_quad(const vec2& position, const vec2& size, const vec2& ori
 void Renderer::draw_sprite(const RenderCommand* cmd, const Texture2D* tex)
 {
     if (!tex) return;
-    current_texture = tex->id;
+    set_texture(tex->id);
 
     const vec2 size(float(tex->width), float(tex->height));
 
     const vec2 origin(cmd->pivotX * size.x, cmd->pivotY * size.y);
     const float rot = glm::radians(cmd->rotation);
     const vec4 color(cmd->color[0] / 255.f, cmd->color[1] / 255.f, cmd->color[2] / 255.f, cmd->color[3] / 255.f);
-    const vec2 uvs[4] = {{0, 0}, {1, 0}, {1, 1}, {0, 1}};
+    const vec2 uvs[4] = {{0, 1}, {1, 1}, {1, 0}, {0, 0}};
 
     emit_quad({cmd->x, cmd->y}, size, origin, rot, color,
               0.f,  // sprite
@@ -475,6 +485,69 @@ void Renderer::draw_line(const RenderCommand* cmd)
     emit_quad({cmd->x, cmd->y}, {length, cmd->radius * 2.f}, {0.f, cmd->radius}, angle, color,
               3.f,  // line
               nullptr);
+}
+
+void Renderer::draw_text(const RenderCommand* cmd)
+{
+    if (!cmd || !cmd->font || cmd->text.empty()) return;
+
+    const Font& font = *cmd->font;
+    set_texture(font.texture->id);
+
+    const vec4 color(cmd->color[0] / 255.f, cmd->color[1] / 255.f, cmd->color[2] / 255.f, cmd->color[3] / 255.f);
+    const float rotation = glm::radians(cmd->rotation);
+    const float scale = (cmd->scale != 0.f) ? cmd->scale : 1.f;
+
+    // Measure text block for pivot
+    float line_width = 0.f;
+    float max_width = 0.f;
+    float total_height = font.line_height * scale;
+
+    for (char c : cmd->text)
+    {
+        if (c == '\n')
+        {
+            max_width = std::max(max_width, line_width);
+            line_width = 0.f;
+            total_height += font.line_height * scale;
+            continue;
+        }
+
+        auto it = font.glyphs.find(c);
+        if (it == font.glyphs.end()) continue;
+        line_width += it->second.advance * scale;
+    }
+
+    max_width = std::max(max_width, line_width);
+
+    vec2 origin(cmd->pivotX * max_width, cmd->pivotY * total_height);
+
+    // Emit glyph quads
+    vec2 pen(0.f);
+
+    for (char c : cmd->text)
+    {
+        if (c == '\n')
+        {
+            pen.x = 0.f;
+            pen.y += font.line_height * scale;
+            continue;
+        }
+
+        auto it = font.glyphs.find(c);
+        if (it == font.glyphs.end()) continue;
+
+        const Glyph& g = it->second;
+        float baseline = cmd->y + pen.y + font.ascent * scale;
+        const vec2 glyph_pos(cmd->x + pen.x + g.bearing.x * scale, baseline - g.bearing.y * scale);
+        const vec2 glyph_size(g.size.x * scale, g.size.y * scale);
+
+        emit_quad(glyph_pos, glyph_size, origin, rotation, color,
+                  4.f,  // text Z / sort value
+                  g.uv);
+
+        pen.x += g.advance * scale;
+    }
 }
 
 }  // namespace kine

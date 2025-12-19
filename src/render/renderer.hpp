@@ -64,6 +64,7 @@ class Renderer
     void draw_rect(const RenderCommand* cmd);
     void draw_circle(const RenderCommand* cmd);
     void draw_line(const RenderCommand* cmd);
+    void draw_text(const RenderCommand* cmd);
 
    private:
     ResourceManager* resources = nullptr;
@@ -114,6 +115,7 @@ class Renderer
     void create_blit_objects();
     void destroy_blit_objects();
 
+    void set_texture(GLuint texture);
     void draw_batches();
     void draw_batches_direct();
     void draw_batches_virtual();

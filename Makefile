@@ -14,6 +14,9 @@ FORMAT_SOURCES := $(shell find . -regex '.*\.\(h\|hpp\|cpp\|cxx\|cc\)')
 GLFW_REPO := https://github.com/glfw/glfw.git
 GLFW_TAG := 3.4 # or master
 
+FREETYPE_VERSION := 2.13.3
+FREETYPE_URL := https://download.savannah.gnu.org/releases/freetype/freetype-$(FREETYPE_VERSION).tar.gz
+
 IMGUI_URL := https://github.com/ocornut/imgui/archive/refs/heads/master.zip
 LUA_URL := https://www.lua.org/ftp/lua-5.4.6.tar.gz
 
@@ -132,7 +135,29 @@ deps: $(EXTERNAL_DIR)
 		echo "Installing stb_image"; \
 		mkdir -p $(EXTERNAL_DIR)/stb; \
 		$(DOWNLOAD) "$(STB_URL)" > $(EXTERNAL_DIR)/stb/stb_image.h; \
-	else echo "stb already present"; fi
+	else echo "stb_image already present"; fi
+
+	@if [ ! -f $(EXTERNAL_DIR)/freetype/lib/libfreetype.a ]; then \
+		echo "Installing FreeType $(FREETYPE_VERSION)"; \
+		tmp=$$(mktemp -d); \
+		$(DOWNLOAD) "$(FREETYPE_URL)" > "$$tmp/freetype.tar.gz"; \
+		tar -xzf "$$tmp/freetype.tar.gz" -C "$$tmp"; \
+		src=$$(find "$$tmp" -maxdepth 1 -type d -name "freetype-*"); \
+		mkdir -p "$$tmp/freetype-build"; \
+		cmake -S "$$src" -B "$$tmp/freetype-build" \
+			-DCMAKE_BUILD_TYPE=Release \
+			-DBUILD_SHARED_LIBS=OFF \
+			-DFT_DISABLE_ZLIB=ON \
+			-DFT_DISABLE_PNG=ON \
+			-DFT_DISABLE_BZIP2=ON \
+			-DFT_DISABLE_HARFBUZZ=ON; \
+		cmake --build "$$tmp/freetype-build" -- -j$(JOBS); \
+		mkdir -p $(EXTERNAL_DIR)/freetype/include $(EXTERNAL_DIR)/freetype/lib; \
+		cp "$$tmp"/freetype-install/include/ft2build.h $(EXTERNAL_DIR)/freetype/include/ \
+		cp -r "$$tmp"/freetype-install/include/freetype $(EXTERNAL_DIR)/freetype/include/ \
+		cp "$$tmp"/freetype-build/libfreetype.a $(EXTERNAL_DIR)/freetype/lib/; \
+		rm -rf "$$tmp"; \
+	else echo "FreeType already present"; fi
 
 	@if [ ! -f $(EXTERNAL_DIR)/miniaudio/miniaudio.h ]; then \
 		echo "Installing MiniAudio"; \
