@@ -43,9 +43,8 @@ Window::Window(int width, int height, const char* title)
     glfwSetFramebufferSizeCallback(window, update_viewport);
 }
 
-void Window::update_viewport(GLFWwindow* window, int width, int height)
+void Window::update_viewport(GLFWwindow*, int width, int height)
 {
-    (void)window;
     glViewport(0, 0, width, height);
 }
 }  // namespace kine

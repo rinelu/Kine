@@ -2,8 +2,6 @@
 #include <algorithm>
 #include <log.hpp>
 #include <memory>
-#include "GLFW/glfw3.h"
-#include "glad/glad.h"
 
 #define GL_CHECK()                                            \
     do                                                        \
@@ -188,7 +186,6 @@ void Renderer::render()
 
     end_frame();
     glfwSwapBuffers(window);
-    glfwPollEvents();
 }
 
 void Renderer::create_gl_objects()
@@ -385,7 +382,7 @@ void Renderer::flush_cpu_vertices()
 
     if (cpu_vertices.size() > MAX_VERTICES)
     {
-        LOG_ERROR("Renderer: cpu_vertices overflow: ", cpu_vertices.size());
+        LOG_ERROR("Renderer: cpu_vertices overflow ", cpu_vertices.size());
         cpu_vertices.clear();
         return;
     }
@@ -519,12 +516,10 @@ void Renderer::draw_text(const RenderCommand* cmd)
     }
 
     max_width = std::max(max_width, line_width);
-
     vec2 origin(cmd->pivotX * max_width, cmd->pivotY * total_height);
 
     // Emit glyph quads
     vec2 pen(0.f);
-
     for (char c : cmd->text)
     {
         if (c == '\n')
@@ -543,9 +538,8 @@ void Renderer::draw_text(const RenderCommand* cmd)
         const vec2 glyph_size(g.size.x * scale, g.size.y * scale);
 
         emit_quad(glyph_pos, glyph_size, origin, rotation, color,
-                  4.f,  // text Z / sort value
+                  4.f,  // text
                   g.uv);
-
         pen.x += g.advance * scale;
     }
 }

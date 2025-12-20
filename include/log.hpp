@@ -139,6 +139,7 @@ class Log
     {
         if (static_cast<uint8_t>(lvl) < static_cast<uint8_t>(min_level)) return;
 
+        (void)loc;
         std::lock_guard lock(write_mutex);
 
         // timestamp
