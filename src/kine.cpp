@@ -10,6 +10,7 @@ KineEngine::KineEngine(int width, int height, const char* title)
     _resourceManager = std::make_shared<ResourceManager>();
     _render_list = std::make_shared<RenderList>();
     _renderer = std::make_unique<Renderer>(_resourceManager.get(), _render_list.get(), window.get()->get());
+    flow = std::make_shared<FlowTree>();
 }
 KineEngine::~KineEngine() = default;
 
@@ -19,6 +20,9 @@ void KineEngine::init()
     _renderer->init();
     _input->init(window->get());
     running = true;
+
+    flow->create<FlowObject>("root");
+    flow->finalize();
 }
 
 void KineEngine::begin_frame()

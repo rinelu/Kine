@@ -3,8 +3,8 @@
 
 #include "core/time.hpp"
 #include "flow/flow_tree.hpp"
-#include "render/renderer.hpp"
 #include "io/input.hpp"
+#include "render/renderer.hpp"
 #include "render/window.hpp"
 #include "resources/resource_manager.hpp"
 
@@ -29,15 +29,15 @@ class KineEngine
     inline Input* input() const { return _input.get(); }
     inline ResourceManager* resource() const { return _resourceManager.get(); }
     inline RenderList* render() const { return _render_list.get(); }
-    // inline FlowTree& flow_tree() { return *flow; }
+    inline FlowTree& flow_tree() { return *flow; }
 
    private:
     std::unique_ptr<Time> time;
-    std::unique_ptr<FlowTree> flow;
+    std::unique_ptr<Renderer> _renderer;
 
+    std::shared_ptr<FlowTree> flow;
     std::shared_ptr<Window> window;
     std::shared_ptr<Input> _input;
     std::shared_ptr<ResourceManager> _resourceManager;
     std::shared_ptr<RenderList> _render_list;
-    std::shared_ptr<Renderer> _renderer;
 };

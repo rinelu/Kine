@@ -1,6 +1,5 @@
 #include "window.hpp"
 #include <cstdlib>
-#include "glad/glad.h"
 #include "log.hpp"
 
 namespace kine
@@ -43,8 +42,5 @@ Window::Window(int width, int height, const char* title)
     glfwSetFramebufferSizeCallback(window, update_viewport);
 }
 
-void Window::update_viewport(GLFWwindow*, int width, int height)
-{
-    glViewport(0, 0, width, height);
-}
+void Window::update_viewport(GLFWwindow*, int width, int height) { glViewport(0, 0, width, height); }
 }  // namespace kine

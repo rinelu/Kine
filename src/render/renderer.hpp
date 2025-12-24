@@ -1,10 +1,9 @@
 #pragma once
-#include <glad/glad.h>
 #include <math.hpp>
 #include <memory>
 #include <vector>
+#include "GL.hpp"
 
-#include "GLFW/glfw3.h"
 #include "render_batcher.hpp"
 #include "render_command.hpp"
 #include "render_list.hpp"

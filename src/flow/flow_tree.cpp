@@ -7,7 +7,7 @@ void FlowTree::finalize()
 {
     if (!root) return;
     call_init(root.get());
-    readyCalled = true;
+    ready_called = true;
 }
 
 void FlowTree::call_init(FlowObject* obj)
@@ -19,7 +19,7 @@ void FlowTree::call_init(FlowObject* obj)
 void FlowTree::update(float dt)
 {
     if (!root) return;
-    if (!readyCalled) finalize();
+    if (!ready_called) finalize();
 
     call_update(root.get(), dt);
 }
@@ -30,4 +30,4 @@ void FlowTree::call_update(FlowObject* obj, float dt)
     for (auto& c : obj->children) call_update(c.get(), dt);
 }
 
-}  // namespace sf
+}  // namespace kine

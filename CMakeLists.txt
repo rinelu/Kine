@@ -4,14 +4,6 @@ project(Kine LANGUAGES C CXX)
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
     set(BUILD_SHARED_LIBS OFF)
     message(STATUS "Release build: STATIC linking enabled")
-
-    if (UNIX AND NOT APPLE)
-        target_link_options(Kine PRIVATE
-            -static
-            -static-libgcc
-            -static-libstdc++
-        )
-    endif()
 else()
     set(BUILD_SHARED_LIBS ON)
     message(STATUS "Debug build: DYNAMIC linking enabled")
@@ -77,7 +69,13 @@ file(GLOB_RECURSE KINE_SOURCES
 add_library(glad OBJECT ${GLAD_SRC})
 set_source_files_properties(${GLAD_SRC} PROPERTIES LANGUAGE C)
 set_target_properties(glad PROPERTIES LINKER_LANGUAGE C)
-add_executable(Kine ${KINE_SOURCES})
+set_target_properties(glad PROPERTIES
+    POSITION_INDEPENDENT_CODE ON
+)
+add_library(Kine ${KINE_SOURCES} $<TARGET_OBJECTS:glad>)
+set_target_properties(Kine PROPERTIES
+    POSITION_INDEPENDENT_CODE ON
+)
 
 target_include_directories(Kine PRIVATE
     ${GLFW_INCLUDE_DIR}
@@ -103,8 +101,15 @@ target_link_libraries(Kine PRIVATE
     z
     png
     lua
-    # entt::entt
 )
+
+if (WIN32 AND CMAKE_BUILD_TYPE STREQUAL "Release")
+    target_link_options(Kine PRIVATE
+        -static
+        -static-libgcc
+        -static-libstdc++
+    )
+endif()
 
 # Linux system libs
 if(UNIX AND NOT APPLE)

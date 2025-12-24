@@ -1,9 +1,10 @@
 #pragma once
-#include <GLFW/glfw3.h>
 #include <array>
 #include <string>
 #include <unordered_map>
 #include <vector>
+
+#include "GL.hpp"
 #include "math.hpp"
 
 namespace kine

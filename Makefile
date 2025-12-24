@@ -96,6 +96,7 @@ deps: $(EXTERNAL_DIR)
 			-DBUILD_SHARED_LIBS=OFF \
 			-DGLFW_BUILD_EXAMPLES=OFF \
 			-DGLFW_BUILD_TESTS=OFF \
+			-DCMAKE_POSITION_INDEPENDENT_CODE=ON \
 			-DGLFW_BUILD_DOCS=OFF \
 			-DGLFW_BUILD_WAYLAND=ON \
 			-DGLFW_BUILD_X11=ON; \
@@ -146,6 +147,7 @@ deps: $(EXTERNAL_DIR)
 		mkdir -p "$$tmp/freetype-build"; \
 		cmake -S "$$src" -B "$$tmp/freetype-build" \
 			-DCMAKE_BUILD_TYPE=Release \
+			-DCMAKE_POSITION_INDEPENDENT_CODE=ON \
 			-DBUILD_SHARED_LIBS=OFF \
 			-DFT_DISABLE_ZLIB=ON \
 			-DFT_DISABLE_PNG=ON \
@@ -153,8 +155,8 @@ deps: $(EXTERNAL_DIR)
 			-DFT_DISABLE_HARFBUZZ=ON; \
 		cmake --build "$$tmp/freetype-build" -- -j$(JOBS); \
 		mkdir -p $(EXTERNAL_DIR)/freetype/include $(EXTERNAL_DIR)/freetype/lib; \
-		cp "$$tmp"/freetype-install/include/ft2build.h $(EXTERNAL_DIR)/freetype/include/ \
-		cp -r "$$tmp"/freetype-install/include/freetype $(EXTERNAL_DIR)/freetype/include/ \
+		cp "$$tmp"/freetype-$(FREETYPE_VERSION)/include/ft2build.h $(EXTERNAL_DIR)/freetype/include/ \
+		cp -r "$$tmp"/freetype-$(FREETYPE_VERSION)/include/freetype $(EXTERNAL_DIR)/freetype/include/ \
 		cp "$$tmp"/freetype-build/libfreetype.a $(EXTERNAL_DIR)/freetype/lib/; \
 		rm -rf "$$tmp"; \
 	else echo "FreeType already present"; fi

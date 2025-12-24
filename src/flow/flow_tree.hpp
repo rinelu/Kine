@@ -17,19 +17,20 @@ class FlowTree
     {
         root = std::make_unique<T>(std::forward<Args>(args)...);
         root->name = name;
+        LOG_INFO("FlowTree: Creating tree root with name ", name);
         return static_cast<T*>(root.get());
     }
 
     void finalize();
     void update(float dt);
-    void tick(float dt); // TODO
+    void tick(float dt);  // TODO
 
    private:
     void call_init(FlowObject* obj);
     void call_update(FlowObject* obj, float dt);
-    void call_tick(FlowObject* obj, float dt); // TODO
+    void call_tick(FlowObject* obj, float dt);  // TODO
 
-    bool readyCalled = false;
+    bool ready_called = false;
 };
 
 }  // namespace kine
