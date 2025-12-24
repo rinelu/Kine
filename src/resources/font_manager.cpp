@@ -1,7 +1,6 @@
-#include "font_manager.hpp"
-#include "resource_manager.hpp"
 #include <algorithm>
 #include <log.hpp>
+#include "resources/resource_manager.hpp"
 
 namespace kine
 {

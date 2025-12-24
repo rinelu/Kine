@@ -8,29 +8,30 @@ class FlowTree
 {
    public:
     FlowTree() = default;
-    ~FlowTree() = default;
-
-    std::unique_ptr<FlowObject> root;
 
     template <typename T = FlowObject, typename... Args>
     T* create(const std::string& name, Args&&... args)
     {
         root = std::make_unique<T>(std::forward<Args>(args)...);
         root->name = name;
-        LOG_INFO("FlowTree: Creating tree root with name ", name);
+
+        LOG_DEBUG("FlowTree: Creating root ", name);
         return static_cast<T*>(root.get());
     }
 
     void finalize();
     void update(float dt);
-    void tick(float dt);  // TODO
+
+    ECS& ecs() { return ecs_; }
 
    private:
-    void call_init(FlowObject* obj);
-    void call_update(FlowObject* obj, float dt);
-    void call_tick(FlowObject* obj, float dt);  // TODO
+    std::unique_ptr<FlowObject> root;
+    ECS ecs_;
+    bool ready = false;
 
-    bool ready_called = false;
+    void attach_recursive(FlowObject* obj);
+    void init_recursive(FlowObject* obj);
+    void update_recursive(FlowObject* obj, float dt);
 };
 
 }  // namespace kine

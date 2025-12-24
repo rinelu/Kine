@@ -1,4 +1,4 @@
-#include "time.hpp"
+#include "core/time.hpp"
 
 #include <algorithm>
 #include "GLFW/glfw3.h"
@@ -6,9 +6,10 @@
 namespace kine
 {
 
+// TODO: Maybe inline
 void Time::begin_frame()
 {
-    float current_time = (float)glfwGetTime();
+    float current_time = (float) glfwGetTime();
     dt = current_time - last_frame_time;
     last_frame_time = current_time;
 

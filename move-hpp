@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SRC_DIR="src"
+INCLUDE_DIR="include"
+
+if [[ ! -d "$SRC_DIR" ]]; then
+    echo "[ERROR] src/ directory not found"
+    exit 1
+fi
+
+mkdir -p "$INCLUDE_DIR"
+
+find "$SRC_DIR" -type f -name "*.hpp" | while read -r file; do
+    rel_path="${file#$SRC_DIR/}"
+    target="$INCLUDE_DIR/$rel_path"
+    target_dir="$(dirname "$target")"
+
+    mkdir -p "$target_dir"
+
+    if [[ -e "$target" ]]; then
+        echo "[ERROR] target already exists: $target"
+        exit 1
+    fi
+
+    echo "[INFO ] Moving $file -> $target"
+    git mv "$file" "$target" 2>/dev/null || mv "$file" "$target"
+done
+
+echo "[INFO ] Done"

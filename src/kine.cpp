@@ -20,9 +20,6 @@ void KineEngine::init()
     _renderer->init();
     _input->init(window->get());
     running = true;
-
-    flow->create<FlowObject>("root");
-    flow->finalize();
 }
 
 void KineEngine::begin_frame()
@@ -34,7 +31,12 @@ void KineEngine::begin_frame()
     glfwPollEvents();
 }
 
-void KineEngine::update() {}
+void KineEngine::update()
+{
+    float dt = time->dt;
+
+    flow->update(dt);
+}
 
 void KineEngine::render_frame() { _renderer->render(); }
 

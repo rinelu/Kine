@@ -1,6 +1,4 @@
-#include "texture_manager.hpp"
-#include "log.hpp"
-#include "resource_manager.hpp"
+#include "resources/resource_manager.hpp"
 
 #include <stb_image.h>
 

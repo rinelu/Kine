@@ -66,6 +66,14 @@ class ECS
         return reg.get<T>(entity);
     }
 
+    template <typename T, typename... Args>
+    T& add_or_get(Entity entity, Args&&... args)
+    {
+        if (reg.all_of<T>(entity)) return get_component<T>(entity);
+
+        return add_component<T>(entity, std::forward<Args>(args)...);
+    }
+
     template <typename... Components>
     auto view()
     {
@@ -111,6 +119,12 @@ class ECS
 
    private:
     entt::registry reg;
+};
+
+template <typename... Components>
+struct Requires
+{
+    static void attach(ECS& ecs, Entity e) { (ecs.add_or_get<Components>(e), ...); }
 };
 
 }  // namespace kine

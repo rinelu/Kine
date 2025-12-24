@@ -1,8 +1,7 @@
-#include "render_batcher.hpp"
-
-#include "../resources/resource_manager.hpp"
+#include "render/render_batcher.hpp"
 
 #include <algorithm>
+#include "resources/resource_manager.hpp"
 
 namespace kine
 {

@@ -1,17 +1,18 @@
 #pragma once
+#include <log.hpp>
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include "font_manager.hpp"
 #include "resources/texture_manager.hpp"
 #include "shader_manager.hpp"
-#include "font_manager.hpp"
 
 namespace kine
 {
 
 class ResourceManager
 {
-public:
+   public:
     ResourceManager();
 
     void init();
@@ -23,7 +24,7 @@ public:
 
     const std::string& get_path(const std::string& name) const;
 
-private:
+   private:
     void build();
 
     std::vector<std::string> search_dirs;
@@ -36,4 +37,4 @@ private:
     FontManager* font_manager = nullptr;
 };
 
-} // namespace kine
+}  // namespace kine

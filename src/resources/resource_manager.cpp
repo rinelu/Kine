@@ -1,6 +1,5 @@
-#include "resource_manager.hpp"
+#include "resources/resource_manager.hpp"
 #include <filesystem>
-#include <log.hpp>
 #include <stdexcept>
 
 namespace fs = std::filesystem;

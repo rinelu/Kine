@@ -1,4 +1,4 @@
-#include "flow_object.hpp"
+#include "flow/flow_object.hpp"
 
 namespace kine
 {
@@ -13,4 +13,4 @@ FlowObject* FlowObject::find(const std::string& targetName)
     return nullptr;
 }
 
-}  // namespace sf
+}  // namespace kine

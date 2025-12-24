@@ -1,9 +1,7 @@
-#include "shader_manager.hpp"
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
-#include "log.hpp"
-#include "resource_manager.hpp"
+#include "resources/resource_manager.hpp"
 
 namespace kine
 {

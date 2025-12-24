@@ -167,3 +167,30 @@ else()
         -Wformat=2
     )
 endif()
+
+file(GLOB EXAMPLE_DIRS "${CMAKE_SOURCE_DIR}/examples/*")
+
+foreach(example_dir ${EXAMPLE_DIRS})
+    if (IS_DIRECTORY ${example_dir})
+        get_filename_component(example_name ${example_dir} NAME)
+
+        file(GLOB_RECURSE EXAMPLE_SOURCES
+            "${example_dir}/*.cpp"
+        )
+
+        add_executable(${example_name} ${EXAMPLE_SOURCES})
+
+        target_link_libraries(${example_name} PRIVATE Kine)
+
+        set_target_properties(${example_name} PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin
+        )
+
+        add_custom_command(
+            TARGET ${example_name} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_directory
+                "${CMAKE_SOURCE_DIR}/assets"
+                "${CMAKE_SOURCE_DIR}/bin/assets"
+        )
+    endif()
+endforeach()

@@ -1,7 +1,8 @@
 #pragma once
+#include <ecs/ecs.hpp>
 #include <memory>
 #include <string>
-#include "../ecs/ecs.hpp"
+#include <vector>
 
 namespace kine
 {
@@ -9,20 +10,19 @@ namespace kine
 class FlowObject
 {
    public:
-    FlowObject() = default;
     virtual ~FlowObject() = default;
 
-    std::string name = "";
-
+    std::string name;
     FlowObject* parent = nullptr;
     std::vector<std::unique_ptr<FlowObject>> children;
-    ECS ecs;
 
-    virtual void on_attach() {}
-    virtual void on_detach() {}
-    virtual void init() {}
-    virtual void update(float dt) { (void) dt; }
-    virtual void tick(float dt) { (void) dt; }
+    Entity entity{entt::null};
+
+    virtual void on_attach(ECS&) {}
+    virtual void on_detach(ECS&) {}
+    virtual void init(ECS&) {}
+    virtual void update(ECS&, float) {}
+    virtual void tick(ECS&, float) {}
 
     template <typename T, typename... Args>
     T* add_child(const std::string& childName, Args&&... args)
@@ -33,12 +33,10 @@ class FlowObject
 
         T* raw = child.get();
         children.push_back(std::move(child));
-
-        raw->on_mount();
         return raw;
     }
 
     FlowObject* find(const std::string& targetName);
 };
 
-}  // namespace sf
+}  // namespace kine

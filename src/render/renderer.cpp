@@ -1,4 +1,4 @@
-#include "renderer.hpp"
+#include "render/renderer.hpp"
 #include <algorithm>
 #include <log.hpp>
 #include <memory>
@@ -94,7 +94,6 @@ void Renderer::set_virtual_resolution(int width, int height)
     glBindFramebuffer(GL_FRAMEBUFFER, virtual_fbo);
     // GL_CHECK();
 
-    LOG_TRACE("GL context when creating FBO = ", glfwGetCurrentContext());
     // Texture
     glGenTextures(1, &virtual_color);
     glBindTexture(GL_TEXTURE_2D, virtual_color);
