@@ -1,6 +1,7 @@
 #pragma once
 #include <memory>
 
+#include "core/scheduler.hpp"
 #include "core/time.hpp"
 #include "flow/flow_tree.hpp"
 #include "io/input.hpp"
@@ -18,22 +19,24 @@ class KineEngine
     KineEngine(int width, int height, const char* title);
     ~KineEngine();
 
+    inline float delta_time() const { return time->dt; }
+    inline Renderer* renderer() const { return _renderer.get(); }
+    inline Input* input() const { return _input.get(); }
+    inline ResourceManager* resource() const { return _resourceManager.get(); }
+    inline RenderList* render() const { return _render_list.get(); }
+    inline FlowTree* flow_tree() const { return flow.get(); }
+    inline Scheduler* scheduler() const { return _scheduler.get(); }
+
     void init();
     void shutdown();
     void begin_frame();
     void update();
     void render_frame();
 
-    inline float delta_time() const { return time->dt; }
-    inline Renderer* renderer() const { return _renderer.get(); }
-    inline Input* input() const { return _input.get(); }
-    inline ResourceManager* resource() const { return _resourceManager.get(); }
-    inline RenderList* render() const { return _render_list.get(); }
-    inline FlowTree& flow_tree() { return *flow; }
-
    private:
     std::unique_ptr<Time> time;
     std::unique_ptr<Renderer> _renderer;
+    std::unique_ptr<Scheduler> _scheduler;
 
     std::shared_ptr<FlowTree> flow;
     std::shared_ptr<Window> window;

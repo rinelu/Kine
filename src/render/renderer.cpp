@@ -189,7 +189,7 @@ void Renderer::render()
 
 void Renderer::create_gl_objects()
 {
-    LOG_INFO("Renderer: creating main VAO/VBO");
+    LOG_DEBUG("Renderer: creating main VAO/VBO");
 
     glGenVertexArrays(1, &vao);
     glGenBuffers(1, &vbo);

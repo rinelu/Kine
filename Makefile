@@ -214,7 +214,6 @@ format:
 
 
 build:
-	rm -rf $(BUILD_DIR)/CMakeCache.txt
 	@mkdir -p $(BUILD_DIR) $(BIN_DIR)
 	@cd $(BUILD_DIR) && \
 		( [ -f CMakeCache.txt ] || cmake -DCMAKE_BUILD_TYPE=$(CMAKE_BUILD_TYPE) .. ) && \

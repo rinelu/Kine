@@ -2,10 +2,44 @@
 #include <filesystem>
 #include <stdexcept>
 
+#if defined(_WIN32)
+#include <windows.h>
+#elif defined(__APPLE__)
+#include <mach-o/dyld.h>
+#elif defined(__linux__)
+#include <unistd.h>
+#endif
+
 namespace fs = std::filesystem;
 
 namespace kine
 {
+
+fs::path get_executable_dir()
+{
+    fs::path exe_path;
+
+#if defined(_WIN32)
+    char buffer[MAX_PATH];
+    GetModuleFileNameA(nullptr, buffer, MAX_PATH);
+    exe_path = buffer;
+
+#elif defined(__APPLE__)
+    uint32_t size = 0;
+    _NSGetExecutablePath(nullptr, &size);
+    std::string buffer(size, '\0');
+    _NSGetExecutablePath(buffer.data(), &size);
+    exe_path = buffer;
+
+#elif defined(__linux__)
+    char buffer[4096];
+    ssize_t len = readlink("/proc/self/exe", buffer, sizeof(buffer) - 1);
+    buffer[len] = '\0';
+    exe_path = buffer;
+#endif
+
+    return exe_path.parent_path();
+}
 
 ResourceManager::ResourceManager()
 {
@@ -15,6 +49,9 @@ ResourceManager::ResourceManager()
 
 void ResourceManager::init()
 {
+    if (search_dirs.empty() || extensions.empty())
+        LOG_THROW(std::runtime_error, "ResourceManager: search directories is not specified.");
+
     build();
 
     texture_manager = new TextureManager(*this);
@@ -35,9 +72,11 @@ void ResourceManager::shutdown()
 void ResourceManager::build()
 {
     file_index.clear();
+    auto exe_dir = get_executable_dir();
 
-    for (const auto& dir : search_dirs)
+    for (const auto& search_dir : search_dirs)
     {
+        auto dir = (exe_dir / search_dir);
         fs::path root = fs::path(dir);
 
         if (!fs::exists(root))

@@ -3,6 +3,7 @@
 // TODO REFACTOR
 namespace kine
 {
+
 namespace input
 {
     static Input* instance = nullptr;

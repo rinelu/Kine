@@ -22,7 +22,7 @@ class FlowObject
     virtual void on_detach(ECS&) {}
     virtual void init(ECS&) {}
     virtual void update(ECS&, float) {}
-    virtual void tick(ECS&, float) {}
+    virtual void fixed_update(ECS&, float) {}
 
     template <typename T, typename... Args>
     T* add_child(const std::string& childName, Args&&... args)

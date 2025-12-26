@@ -15,6 +15,15 @@ class ResourceManager
    public:
     ResourceManager();
 
+    inline void add_search(std::vector<std::string> dirs, std::vector<std::string> ext)
+    {
+        search_dirs.reserve(search_dirs.size() + dirs.size());
+        search_dirs.insert(search_dirs.end(), dirs.begin(), dirs.end());
+
+        extensions.reserve(extensions.size() + ext.size());
+        extensions.insert(extensions.end(), ext.begin(), ext.end());
+    }
+
     void init();
     void shutdown();
 

@@ -67,7 +67,7 @@ class ECS
     }
 
     template <typename T, typename... Args>
-    T& add_or_get(Entity entity, Args&&... args)
+    T& add_or_get_component(Entity entity, Args&&... args)
     {
         if (reg.all_of<T>(entity)) return get_component<T>(entity);
 
@@ -124,7 +124,7 @@ class ECS
 template <typename... Components>
 struct Requires
 {
-    static void attach(ECS& ecs, Entity e) { (ecs.add_or_get<Components>(e), ...); }
+    static void attach(ECS& ecs, Entity e) { (ecs.add_or_get_component<Components>(e), ...); }
 };
 
 }  // namespace kine

@@ -166,8 +166,6 @@ template <typename Ex, typename... Args>
 
 }  // namespace Log
 
-// ---- Macros ----
-
 #define TYPE_NAME(x) Log::type_name<x>()
 
 #define LOG_TRACE(...) Log::write(Log::Level::Trace, std::source_location::current(), __VA_ARGS__)

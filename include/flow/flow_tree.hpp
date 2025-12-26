@@ -21,6 +21,7 @@ class FlowTree
 
     void finalize();
     void update(float dt);
+    void fixed_update(float fixed_dt);
 
     ECS& ecs() { return ecs_; }
 
@@ -32,6 +33,7 @@ class FlowTree
     void attach_recursive(FlowObject* obj);
     void init_recursive(FlowObject* obj);
     void update_recursive(FlowObject* obj, float dt);
+    void fixed_update_recursive(FlowObject* obj, float fixed_dt);
 };
 
 }  // namespace kine
