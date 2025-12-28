@@ -3,11 +3,11 @@
 #include <algorithm>
 #include "GLFW/glfw3.h"
 
-namespace kine
+namespace kine::time
 {
 
-// TODO: Maybe inline
-void Time::begin_frame()
+// TODO: Maybe turn this into inline void
+void begin_frame()
 {
     float current_time = (float) glfwGetTime();
     dt = current_time - last_frame_time;
@@ -18,4 +18,4 @@ void Time::begin_frame()
     alpha = std::clamp(alpha, 0.0f, 1.0f);
 }
 
-}  // namespace kine
+}  // namespace kine::time

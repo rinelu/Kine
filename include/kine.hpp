@@ -1,5 +1,4 @@
 #pragma once
-#include <memory>
 
 #include "core/scheduler.hpp"
 #include "core/time.hpp"
@@ -9,38 +8,26 @@
 #include "render/window.hpp"
 #include "resources/resource_manager.hpp"
 
-using namespace kine;
-
-class KineEngine
+namespace kine
 {
-   public:
-    bool running = false;
 
-    KineEngine(int width, int height, const char* title);
-    ~KineEngine();
+inline bool running = false;
 
-    inline float delta_time() const { return time->dt; }
-    inline Renderer* renderer() const { return _renderer.get(); }
-    inline Input* input() const { return _input.get(); }
-    inline ResourceManager* resource() const { return _resourceManager.get(); }
-    inline RenderList* render() const { return _render_list.get(); }
-    inline FlowTree* flow_tree() const { return flow.get(); }
-    inline Scheduler* scheduler() const { return _scheduler.get(); }
+inline Renderer* renderer = nullptr;
 
-    void init();
-    void shutdown();
-    void begin_frame();
-    void update();
-    void render_frame();
+inline FlowTree* flow_tree = nullptr;
+inline Input* input = nullptr;
+inline ResourceManager* resource_manager = nullptr;
+inline RenderList* render_list = nullptr;
 
-   private:
-    std::unique_ptr<Time> time;
-    std::unique_ptr<Renderer> _renderer;
-    std::unique_ptr<Scheduler> _scheduler;
+inline float delta_time() { return time::dt; }
 
-    std::shared_ptr<FlowTree> flow;
-    std::shared_ptr<Window> window;
-    std::shared_ptr<Input> _input;
-    std::shared_ptr<ResourceManager> _resourceManager;
-    std::shared_ptr<RenderList> _render_list;
-};
+void create(int width, int height, const char* title);
+void init();
+void shutdown();
+
+void begin_frame();
+void update();
+void render_frame();
+
+}  // namespace kine

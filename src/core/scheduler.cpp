@@ -1,16 +1,41 @@
 #include "core/scheduler.hpp"
 
-namespace kine
+namespace kine::scheduler
 {
 
-bool Scheduler::add_system(std::string name, SystemFunc func)
+void reset()
+{
+    systems.clear();
+    edges.clear();
+    sorted.clear();
+    perm.clear();
+    temp.clear();
+
+    dirty = true;
+    has_cycle = false;
+}
+
+void init()
+{
+    reset();
+    // initialized = true;
+}
+
+void shutdown()
+{
+    // if (!initialized) return;
+    reset();
+    // initialized = false;
+}
+
+bool add_system(std::string name, SystemFunc func)
 {
     systems.emplace(std::move(name), std::move(func));
     dirty = true;
     return true;
 }
 
-bool Scheduler::add_dependency(const std::string& before, const std::string& after)
+bool add_dependency(const std::string& before, const std::string& after)
 {
     if (!systems.contains(before) || !systems.contains(after)) return false;
 
@@ -19,7 +44,7 @@ bool Scheduler::add_dependency(const std::string& before, const std::string& aft
     return true;
 }
 
-bool Scheduler::visit(const std::string& name)
+bool visit(const std::string& name)
 {
     if (perm[name]) return true;
     if (temp[name])
@@ -40,7 +65,7 @@ bool Scheduler::visit(const std::string& name)
     return true;
 }
 
-bool Scheduler::rebuild_order()
+bool rebuild_order()
 {
     sorted.clear();
     perm.clear();
@@ -60,14 +85,14 @@ bool Scheduler::rebuild_order()
     return true;
 }
 
-void Scheduler::update(ECS& ecs, float dt, float alpha)
+void update(ECS& ecs, float dt, float alpha)
 {
     if (dirty && !rebuild_order()) return;  // safe fail: skip update
 
     for (auto& name : sorted) systems[name](ecs, dt, alpha);
 }
 
-void Scheduler::fixed_update(ECS& ecs, float& accumulator, float fixed_dt, float alpha)
+void fixed_update(ECS& ecs, float& accumulator, float fixed_dt, float alpha)
 {
     if (dirty && !rebuild_order()) return;  // safe fail: skip update
 
@@ -78,4 +103,4 @@ void Scheduler::fixed_update(ECS& ecs, float& accumulator, float fixed_dt, float
     }
 }
 
-}  // namespace kine
+}  // namespace kine::scheduler

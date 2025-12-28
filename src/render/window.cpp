@@ -2,10 +2,10 @@
 #include <cstdlib>
 #include "log.hpp"
 
-namespace kine
+namespace kine::window
 {
 
-Window::Window(int width, int height, const char* title)
+void create(int width, int height, const char* title)
 {
     LOG_INFO("Window: initializing GLFW");
     if (!glfwInit())
@@ -42,5 +42,4 @@ Window::Window(int width, int height, const char* title)
     glfwSetFramebufferSizeCallback(window, update_viewport);
 }
 
-void Window::update_viewport(GLFWwindow*, int width, int height) { glViewport(0, 0, width, height); }
-}  // namespace kine
+}  // namespace kine::window

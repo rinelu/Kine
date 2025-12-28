@@ -1,19 +1,15 @@
 #pragma once
 #include "GL.hpp"
 
-namespace kine
+namespace kine::window
 {
 
-class Window
-{
-   public:
-    Window(int width, int height, const char* title);
+inline GLFWwindow* window;
 
-    inline GLFWwindow* get() const { return window; }
-    inline bool should_close() const { return glfwWindowShouldClose(window); }
+void create(int width, int height, const char* title);
 
-   private:
-    static void update_viewport(GLFWwindow* window, int width, int height);
-    GLFWwindow* window;
-};
-}  // namespace kine
+inline GLFWwindow* get() { return window; }
+inline bool should_close() { return glfwWindowShouldClose(window); }
+
+inline void update_viewport(GLFWwindow*, int width, int height) { glViewport(0, 0, width, height); };
+}  // namespace kine::window

@@ -6,42 +6,42 @@
 
 #include "ecs/ecs.hpp"
 
-namespace kine
+namespace kine::scheduler
 {
 
-class Scheduler
-{
-   public:
-    using SystemFunc = std::function<void(ECS&, float, float)>;
+using SystemFunc = std::function<void(ECS&, float, float)>;
 
-    bool add_system(std::string name, SystemFunc func);
-    bool add_dependency(const std::string& before, const std::string& after);
+// Registered systems
+inline std::unordered_map<std::string, SystemFunc> systems;
 
-    bool rebuild_order();
+// Dependencies: before - after
+inline std::unordered_map<std::string, std::vector<std::string>> edges;
 
-    void update(ECS& ecs, float dt, float alpha);
-    void fixed_update(ECS& ecs, float& accumulator, float fixedDt, float alpha);
+// Sorted execution list
+inline std::vector<std::string> sorted;
 
-   private:
-    bool visit(const std::string& name);
+// Permanently visited in DFS
+inline std::unordered_map<std::string, bool> perm;
 
-    // Registered systems
-    std::unordered_map<std::string, SystemFunc> systems;
+// Temporarily visited in DFS
+inline std::unordered_map<std::string, bool> temp;
 
-    // Dependencies
-    std::unordered_map<std::string, std::vector<std::string>> edges;
+inline bool dirty = true;
+inline bool has_cycle = false;
 
-    // Sorted execution list
-    std::vector<std::string> sorted;
+void reset();
+void init();
+void shutdown();
 
-    // Permanently visited in DFS
-    std::unordered_map<std::string, bool> perm;
+bool add_system(std::string name, SystemFunc func);
+bool add_dependency(const std::string& before, const std::string& after);
 
-    // Temporarily visited in DFS
-    std::unordered_map<std::string, bool> temp;
+bool rebuild_order();
 
-    bool dirty = true;  ///< If true, ordering must be rebuilt
-    bool has_cycle = false;
-};
+void update(ECS& ecs, float dt, float alpha);
+void fixed_update(ECS& ecs, float& accumulator, float fixedDt, float alpha);
 
-}  // namespace kine
+// private:
+bool visit(const std::string& name);
+
+}  // namespace kine::scheduler
