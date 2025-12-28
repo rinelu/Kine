@@ -18,7 +18,6 @@ inline Renderer* renderer = nullptr;
 inline FlowTree* flow_tree = nullptr;
 inline Input* input = nullptr;
 inline ResourceManager* resource_manager = nullptr;
-inline RenderList* render_list = nullptr;
 
 inline float delta_time() { return time::dt; }
 

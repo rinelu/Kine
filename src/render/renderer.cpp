@@ -13,8 +13,7 @@
 namespace kine
 {
 
-Renderer::Renderer(ResourceManager* resourceManager, RenderList* _list, GLFWwindow* _window)
-    : resources(resourceManager), render_list(_list), window(_window)
+Renderer::Renderer(ResourceManager* resourceManager, GLFWwindow* _window) : resources(resourceManager), window(_window)
 {
     batcher = std::make_unique<RenderBatcher>(resourceManager);
 }
@@ -176,7 +175,7 @@ void Renderer::render()
 {
     // begin_frame();
 
-    batcher->build(render_list->get());
+    batcher->build(render::get());
 
     if (virtual_enabled)
         draw_batches_virtual();
@@ -185,6 +184,7 @@ void Renderer::render()
 
     end_frame();
     glfwSwapBuffers(window);
+    render::clear();
 }
 
 void Renderer::create_gl_objects()

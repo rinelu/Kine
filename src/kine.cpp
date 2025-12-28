@@ -1,4 +1,5 @@
 #include "kine.hpp"
+#include "render/render_list.hpp"
 
 namespace kine
 {
@@ -6,11 +7,11 @@ namespace kine
 void create(int width, int height, const char* title)
 {
     scheduler::init();
+    render::init();
     window::create(width, height, title);
     input = new Input();
     resource_manager = new ResourceManager();
-    render_list = new RenderList();
-    renderer = new Renderer(resource_manager, render_list, window::get());
+    renderer = new Renderer(resource_manager, window::get());
 
     flow_tree = new FlowTree();
 }
@@ -55,7 +56,6 @@ void shutdown()
     x = nullptr;
 
     RESET(flow_tree);
-    RESET(render_list);
     RESET(input);
     RESET(resource_manager);
     RESET(renderer);

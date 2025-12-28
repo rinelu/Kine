@@ -43,7 +43,7 @@ enum class ScalingMode
 class Renderer
 {
    public:
-    Renderer(ResourceManager* resourceManager, RenderList* _list, GLFWwindow* _window);
+    Renderer(ResourceManager* resourceManager, GLFWwindow* _window);
     ~Renderer();
 
     void init();
@@ -67,7 +67,6 @@ class Renderer
 
    private:
     ResourceManager* resources = nullptr;
-    RenderList* render_list = nullptr;
     GLFWwindow* window = nullptr;
 
     // Batching
