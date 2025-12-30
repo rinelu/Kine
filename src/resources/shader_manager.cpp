@@ -15,7 +15,7 @@ ShaderManager::~ShaderManager()
 
 Shader& ShaderManager::load(const std::string& name, const std::string& vertex, const std::string& fragment)
 {
-    LOG_INFO("ShaderManager: Loading shader : ", name);
+    LOG_INFO("ShaderManager: Loading shader : %s", name.c_str());
     if (shaders.contains(name)) return shaders[name];
 
     std::string vert_src = read_file(resources.get_path(vertex));
@@ -41,7 +41,7 @@ Shader& ShaderManager::get(const std::string& name) { return shaders.at(name); }
 std::string ShaderManager::read_file(const std::string& path)
 {
     std::ifstream file(path);
-    if (!file) LOG_THROW(std::runtime_error, "ShaderManager: Failed to open shader ", path);
+    if (!file) LOG_THROW("ShaderManager: Failed to open shader %s", path.c_str());
 
     std::stringstream ss;
     ss << file.rdbuf();

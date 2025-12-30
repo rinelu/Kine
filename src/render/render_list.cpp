@@ -1,5 +1,5 @@
 #include "render/render_list.hpp"
-#include "log.hpp"
+#include "log.h"
 
 namespace kine::render
 {
@@ -20,7 +20,7 @@ bool is_initialized()
 {
     if (!initialized)
     {
-        LOG_ERROR("RenderList: RenderList is not initialized. Perhaps you forget to initialized the engine.");
+        LOG_ERROR("RenderList: RenderList is not initialized. Perhaps you forgot to initialized the engine.");
         return false;
     }
     return true;

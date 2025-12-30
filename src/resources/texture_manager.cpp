@@ -15,7 +15,7 @@ TextureManager::~TextureManager()
 
 Texture2D& TextureManager::load(const std::string& name, const std::string& file)
 {
-    LOG_INFO("TextureManager: Loading texture ", name);
+    LOG_INFO("TextureManager: Loading texture %s", name.c_str());
 
     if (textures.contains(name)) return textures[name];
 
@@ -28,7 +28,7 @@ Texture2D& TextureManager::get(const std::string& name)
 {
     if (textures.contains(name)) return textures.at(name);
 
-    LOG_ERROR("TextureManager: Failed to load texture ", name);
+    LOG_ERROR("TextureManager: Failed to load texture %s", name.c_str());
     return *error_texture;
 }
 
@@ -45,7 +45,7 @@ Texture2D TextureManager::load_from_file(const std::string& name, const std::str
 
     if (!data)
     {
-        LOG_ERROR("TextureManager: Failed to load texture ", path);
+        LOG_ERROR("TextureManager: Failed to load texture %s", path.c_str());
         return *error_texture;
     }
 

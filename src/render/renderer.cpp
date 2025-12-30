@@ -1,13 +1,12 @@
 #include "render/renderer.hpp"
 #include <algorithm>
-#include <log.hpp>
 #include <memory>
 
-#define GL_CHECK()                                            \
-    do                                                        \
-    {                                                         \
-        GLenum err = glGetError();                            \
-        if (err != GL_NO_ERROR) LOG_ERROR("GL error: ", err); \
+#define GL_CHECK()                                              \
+    do                                                          \
+    {                                                           \
+        GLenum err = glGetError();                              \
+        if (err != GL_NO_ERROR) LOG_ERROR("GL error: %u", err); \
     } while (0)
 
 namespace kine
@@ -70,7 +69,7 @@ void Renderer::end_frame() {}
 
 void Renderer::set_virtual_resolution(int width, int height)
 {
-    LOG_INFO("Renderer: enabling virtual resolution ", width, "x", height);
+    LOG_INFO("Renderer: enabling virtual resolution  %ux%u", width, height);
 
     if (virtual_enabled)
     {
@@ -81,7 +80,7 @@ void Renderer::set_virtual_resolution(int width, int height)
 
     if (width <= 0 || height <= 0)
     {
-        LOG_ERROR("Renderer: invalid virtual resolution ", width, "x", height);
+        LOG_ERROR("Renderer: invalid virtual resolution  %ux%u", width, height);
         return;
     }
 
@@ -381,7 +380,7 @@ void Renderer::flush_cpu_vertices()
 
     if (cpu_vertices.size() > MAX_VERTICES)
     {
-        LOG_ERROR("Renderer: cpu_vertices overflow ", cpu_vertices.size());
+        LOG_ERROR("Renderer: cpu_vertices overflow %zu", cpu_vertices.size());
         cpu_vertices.clear();
         return;
     }

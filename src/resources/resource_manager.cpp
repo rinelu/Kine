@@ -1,6 +1,6 @@
 #include "resources/resource_manager.hpp"
+#include <algorithm>
 #include <filesystem>
-#include <stdexcept>
 
 #if defined(_WIN32)
 #include <windows.h>
@@ -49,8 +49,7 @@ ResourceManager::ResourceManager()
 
 void ResourceManager::init()
 {
-    if (search_dirs.empty() || extensions.empty())
-        LOG_THROW(std::runtime_error, "ResourceManager: search directories is not specified.");
+    if (search_dirs.empty() || extensions.empty()) LOG_THROW("ResourceManager: search directories is not specified.");
 
     build();
 
@@ -58,7 +57,7 @@ void ResourceManager::init()
     shader_manager = new ShaderManager(*this);
     font_manager = new FontManager(*this);
 
-    LOG_INFO("ResourceManager: Indexed ", file_index.size(), " files");
+    LOG_INFO("ResourceManager: Indexed %zu files", file_index.size());
 }
 
 void ResourceManager::shutdown()
@@ -81,7 +80,7 @@ void ResourceManager::build()
 
         if (!fs::exists(root))
         {
-            LOG_WARN("ResourceManager: ", dir, " not found");
+            LOG_WARN("ResourceManager: %s not found", dir.c_str());
             continue;
         }
 
@@ -98,8 +97,8 @@ void ResourceManager::build()
             // relative.replace_extension("");
 
             std::string key = relative.generic_string();
-            LOG_TRACE("ResourceManager: Indexing ", key);
-            if (file_index.contains(key)) LOG_WARN("ResourceManager: ", key, " is duplicate asset key");
+            LOG_TRACE("ResourceManager: Indexing %s", key.c_str());
+            if (file_index.contains(key)) LOG_WARN("ResourceManager: %s is duplicate asset key", key.c_str());
             file_index[key] = path.string();
         }
     }
@@ -108,7 +107,7 @@ void ResourceManager::build()
 const std::string& ResourceManager::get_path(const std::string& name) const
 {
     auto it = file_index.find(name);
-    if (it == file_index.end()) LOG_THROW(std::runtime_error, "ResourceManager: ", name, " not indexed");
+    if (it == file_index.end()) LOG_THROW("ResourceManager: %s not indexed", name.c_str());
 
     return it->second;
 }

@@ -2,9 +2,9 @@
 
 #include <cstdint>
 #include <entt/entt.hpp>
-#include <stdexcept>
 
-#include <log.hpp>
+#include "detail.hpp"
+#include "log.h"
 
 namespace kine
 {
@@ -32,8 +32,7 @@ class ECS
     T& add_component(Entity entity, Args&&... args)
     {
         if (!reg.valid(entity))
-            LOG_THROW(std::runtime_error, "ECS::add_component<", TYPE_NAME(T), ">: invalid entity ",
-                      static_cast<std::uint32_t>(entity));
+            LOG_THROW("ECS::add_component<%s>: invalid entity %d", TYPE_NAME(T), static_cast<std::uint32_t>(entity));
 
         return reg.emplace<T>(entity, std::forward<Args>(args)...);
     }
@@ -56,12 +55,10 @@ class ECS
     T& get_component(Entity entity)
     {
         if (!reg.valid(entity))
-            LOG_THROW(std::runtime_error, "ECS::get_component<", TYPE_NAME(T), ">: invalid entity ",
-                      static_cast<std::uint32_t>(entity));
+            LOG_THROW("ECS::add_component<%s>: invalid entity %d", TYPE_NAME(T), static_cast<std::uint32_t>(entity));
 
         if (!reg.all_of<T>(entity))
-            LOG_THROW(std::runtime_error, "ECS::get_component<", TYPE_NAME(T), ">: entity ",
-                      static_cast<std::uint32_t>(entity), " does not have this component");
+            LOG_THROW("ECS::add_component<%s>: invalid entity %d", TYPE_NAME(T), static_cast<std::uint32_t>(entity));
 
         return reg.get<T>(entity);
     }
@@ -96,8 +93,7 @@ class ECS
     template <typename T>
     T& get_context()
     {
-        if (!reg.ctx().contains<T>())
-            LOG_THROW(std::runtime_error, "ECS::get_context<", TYPE_NAME(T), ">: context does not exist");
+        if (!reg.ctx().contains<T>()) LOG_THROW("ECS::get_context<%s>: context does not exist", TYPE_NAME(T));
 
         return reg.ctx().get<T>();
     }
