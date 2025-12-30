@@ -7,25 +7,15 @@
 #include "ft2build.h"
 #include FT_FREETYPE_H
 
-namespace kine
+namespace kine::resource
 {
 
-class ResourceManager;
+inline FT_Library library;
+inline std::unordered_map<std::string, Font> fonts;
 
-class FontManager
-{
-   public:
-    explicit FontManager(ResourceManager& rm);
-    ~FontManager();
+Font& load_font(const std::string& name, const std::string& file, int pixel_height);
+Font& get_font(const std::string& name);
 
-    Font& load(const std::string& name, const std::string& file, int pixel_height);
-    Font& get(const std::string& name);
+Font load_font_file(const std::string& name, const std::string& path);
 
-   private:
-    Font load_from_file(const std::string& name, const std::string& path);
-
-    FT_Library library;
-    ResourceManager& resources;
-    std::unordered_map<std::string, Font> fonts;
-};
-}  // namespace kine
+}  // namespace kine::resource

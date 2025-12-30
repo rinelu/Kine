@@ -1,18 +1,19 @@
 #include "resources/resource_manager.hpp"
 #include <algorithm>
 #include <filesystem>
+#include <fstream>
 
 #if defined(_WIN32)
-#include <windows.h>
+#    include <windows.h>
 #elif defined(__APPLE__)
-#include <mach-o/dyld.h>
+#    include <mach-o/dyld.h>
 #elif defined(__linux__)
-#include <unistd.h>
+#    include <unistd.h>
 #endif
 
 namespace fs = std::filesystem;
 
-namespace kine
+namespace kine::resource
 {
 
 fs::path get_executable_dir()
@@ -41,34 +42,37 @@ fs::path get_executable_dir()
     return exe_path.parent_path();
 }
 
-ResourceManager::ResourceManager()
+void create()
 {
     search_dirs = {"assets/"};
     extensions = {".vert", ".frag", ".glsl", ".png", ".jpg", ".ttf"};
 }
 
-void ResourceManager::init()
+void init()
 {
     if (search_dirs.empty() || extensions.empty()) LOG_THROW("ResourceManager: search directories is not specified.");
 
     build();
 
-    texture_manager = new TextureManager(*this);
-    shader_manager = new ShaderManager(*this);
-    font_manager = new FontManager(*this);
-
     LOG_INFO("ResourceManager: Indexed %zu files", file_index.size());
+
+    error_texture = &load_texture("error", "error.png");
+    FT_Init_FreeType(&library);
 }
 
-void ResourceManager::shutdown()
+void shutdown()
 {
-    delete shader_manager;
-    shader_manager = nullptr;
-
     file_index.clear();
+
+    for (auto& [_, tex] : textures)
+        if (tex.id) glDeleteTextures(1, &tex.id);
+
+    for (auto& [_, shader] : shaders) glDeleteProgram(shader.program);
+
+    FT_Done_FreeType(library);
 }
 
-void ResourceManager::build()
+void build()
 {
     file_index.clear();
     auto exe_dir = get_executable_dir();
@@ -104,7 +108,7 @@ void ResourceManager::build()
     }
 }
 
-const std::string& ResourceManager::get_path(const std::string& name) const
+const std::string& get_path(const std::string& name)
 {
     auto it = file_index.find(name);
     if (it == file_index.end()) LOG_THROW("ResourceManager: %s not indexed", name.c_str());
@@ -112,8 +116,14 @@ const std::string& ResourceManager::get_path(const std::string& name) const
     return it->second;
 }
 
-TextureManager& ResourceManager::textures() { return *texture_manager; }
-ShaderManager& ResourceManager::shaders() { return *shader_manager; }
-FontManager& ResourceManager::fonts() { return *font_manager; }
+const std::string read_file(const std::string& path)
+{
+    std::ifstream file(path);
+    if (!file) LOG_THROW("ResourceManager: Failed to open file %s", path.c_str());
 
-}  // namespace kine
+    std::stringstream ss;
+    ss << file.rdbuf();
+    return ss.str();
+}
+
+}  // namespace kine::resource

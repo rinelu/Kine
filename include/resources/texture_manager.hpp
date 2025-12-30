@@ -4,29 +4,16 @@
 #include <unordered_map>
 #include "render/texture2d.hpp"
 
-namespace kine
+namespace kine::resource
 {
 
-class ResourceManager;
+inline Texture2D* error_texture = nullptr;
+inline std::unordered_map<std::string, Texture2D> textures;
 
-class TextureManager
-{
-   public:
-    explicit TextureManager(ResourceManager& rm);
-    ~TextureManager();
+Texture2D& load_texture(const std::string& name, const std::string& file);
+Texture2D& get_texture(const std::string& name);
+Texture2D& add_texture(const std::string& name, Texture2D&& tex);
 
-    Texture2D& load(const std::string& name, const std::string& file);
-    Texture2D& get(const std::string& name);
-    Texture2D& add(const std::string& name, Texture2D&& tex);
+Texture2D load_texture_file(const std::string& name, const std::string& path);
 
-   private:
-    Texture2D* error_texture = nullptr;
-
-    Texture2D load_from_file(const std::string& name, const std::string& path);
-
-    ResourceManager& resources;
-    std::unordered_map<std::string, Texture2D> textures;
-
-};
-
-}  // namespace kine
+}  // namespace kine::resource

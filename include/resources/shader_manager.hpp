@@ -3,32 +3,19 @@
 #include <string>
 #include <unordered_map>
 
-namespace kine
+namespace kine::resource
 {
-
-class ResourceManager;
 
 struct Shader
 {
     GLuint program = 0;
 };
 
-class ShaderManager
-{
-   public:
-    explicit ShaderManager(ResourceManager& rm);
-    ~ShaderManager();
+GLuint compile_shader(GLenum type, const std::string& source);
 
-    Shader& load(const std::string& name, const std::string& vertex, const std::string& fragment);
+inline std::unordered_map<std::string, Shader> shaders;
 
-    Shader& get(const std::string& name);
+Shader& load_shader(const std::string& name, const std::string& vertex, const std::string& fragment);
+Shader& get_shader(const std::string& name);
 
-   private:
-    std::string read_file(const std::string& path);
-    GLuint compile(GLenum type, const std::string& source);
-
-    ResourceManager& resources;
-    std::unordered_map<std::string, Shader> shaders;
-};
-
-}  // namespace kine
+}  // namespace kine::resource

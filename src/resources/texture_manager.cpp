@@ -2,29 +2,21 @@
 
 #include <stb_image.h>
 
-namespace kine
+namespace kine::resource
 {
 
-TextureManager::TextureManager(ResourceManager& rm) : resources(rm) { error_texture = &load("error", "error.png"); }
-
-TextureManager::~TextureManager()
-{
-    for (auto& [_, tex] : textures)
-        if (tex.id) glDeleteTextures(1, &tex.id);
-}
-
-Texture2D& TextureManager::load(const std::string& name, const std::string& file)
+Texture2D& load_texture(const std::string& name, const std::string& file)
 {
     LOG_INFO("TextureManager: Loading texture %s", name.c_str());
 
     if (textures.contains(name)) return textures[name];
 
-    const std::string& path = resources.get_path(file);
-    textures[name] = load_from_file(name, path);
+    const std::string& path = resource::get_path(file);
+    textures[name] = load_texture_file(name, path);
     return textures[name];
 }
 
-Texture2D& TextureManager::get(const std::string& name)
+Texture2D& get_texture(const std::string& name)
 {
     if (textures.contains(name)) return textures.at(name);
 
@@ -32,9 +24,9 @@ Texture2D& TextureManager::get(const std::string& name)
     return *error_texture;
 }
 
-Texture2D& TextureManager::add(const std::string& name, Texture2D&& tex) { return textures[name] = std::move(tex); }
+Texture2D& add_texture(const std::string& name, Texture2D&& tex) { return textures[name] = std::move(tex); }
 
-Texture2D TextureManager::load_from_file(const std::string& name, const std::string& path)
+Texture2D load_texture_file(const std::string& name, const std::string& path)
 {
     Texture2D tex;
     tex.name = name;
@@ -75,4 +67,4 @@ Texture2D TextureManager::load_from_file(const std::string& name, const std::str
     return tex;
 }
 
-}  // namespace kine
+}  // namespace kine::resource

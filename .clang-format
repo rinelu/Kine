@@ -9,6 +9,7 @@ BreakBeforeBraces: Allman
 IndentCaseBlocks: false
 IndentCaseLabels: false
 IndentGotoLabels: false
+IndentPPDirectives: AfterHash
 
 ColumnLimit: 120
 SpacesInParentheses: false

@@ -6,51 +6,49 @@
 #include <time.h>
 
 #ifndef LOG_THREAD_SAFE
-#define LOG_THREAD_SAFE 1
+#    define LOG_THREAD_SAFE 1
 #endif
 
 #if LOG_THREAD_SAFE
-#if defined(_WIN32)
-#include <windows.h>
+#    if defined(_WIN32)
+#        include <windows.h>
 static CRITICAL_SECTION log_mutex;
 static int log_mutex_initialized = 0;
-#define LOG_LOCK()                                 \
-    do                                             \
-    {                                              \
-        if (!log_mutex_initialized)                \
-        {                                          \
-            InitializeCriticalSection(&log_mutex); \
-            log_mutex_initialized = 1;             \
-        }                                          \
-        EnterCriticalSection(&log_mutex);          \
-    } while (0)
-#define LOG_UNLOCK() LeaveCriticalSection(&log_mutex)
-#else
-#include <pthread.h>
+#        define LOG_LOCK()                                 \
+            do                                             \
+            {                                              \
+                if (!log_mutex_initialized)                \
+                {                                          \
+                    InitializeCriticalSection(&log_mutex); \
+                    log_mutex_initialized = 1;             \
+                }                                          \
+                EnterCriticalSection(&log_mutex);          \
+            } while (0)
+#        define LOG_UNLOCK() LeaveCriticalSection(&log_mutex)
+#    else
+#        include <pthread.h>
 static pthread_mutex_t log_mutex = PTHREAD_MUTEX_INITIALIZER;
-#define LOG_LOCK() pthread_mutex_lock(&log_mutex)
-#define LOG_UNLOCK() pthread_mutex_unlock(&log_mutex)
-#endif
+#        define LOG_LOCK() pthread_mutex_lock(&log_mutex)
+#        define LOG_UNLOCK() pthread_mutex_unlock(&log_mutex)
+#    endif
 #else
-#define LOG_LOCK()
-#define LOG_UNLOCK()
+#    define LOG_LOCK()
+#    define LOG_UNLOCK()
 #endif
 
 #if defined(__GNUC__) || defined(__clang__)
-
-#define MAYBE_UNUSED __attribute__((unused))
-#ifdef __MINGW_PRINTF_FORMAT
-#define PRINTF_FORMAT(STRING_INDEX, FIRST_TO_CHECK) \
-    __attribute__((format(__MINGW_PRINTF_FORMAT, STRING_INDEX, FIRST_TO_CHECK)))
+#    define MAYBE_UNUSED __attribute__((unused))
+#    ifdef __MINGW_PRINTF_FORMAT
+#        define PRINTF_FORMAT(STRING_INDEX, FIRST_TO_CHECK) \
+            __attribute__((format(__MINGW_PRINTF_FORMAT, STRING_INDEX, FIRST_TO_CHECK)))
+#    else
+#        define PRINTF_FORMAT(STRING_INDEX, FIRST_TO_CHECK) \
+            __attribute__((format(printf, STRING_INDEX, FIRST_TO_CHECK)))
+#    endif  // __MINGW_PRINTF_FORMAT
 #else
-#define PRINTF_FORMAT(STRING_INDEX, FIRST_TO_CHECK) __attribute__((format(printf, STRING_INDEX, FIRST_TO_CHECK)))
-#endif  // __MINGW_PRINTF_FORMAT
-
-#else
-
-#define MAYBE_UNUSED
+#    define MAYBE_UNUSED
 //   TODO: implement PRINTF_FORMAT for MSVC.
-#define PRINTF_FORMAT(STRING_INDEX, FIRST_TO_CHECK)
+#    define PRINTF_FORMAT(STRING_INDEX, FIRST_TO_CHECK)
 #endif
 
 typedef enum LogLevel

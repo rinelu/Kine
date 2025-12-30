@@ -1,19 +1,18 @@
 #include <algorithm>
 #include "resources/resource_manager.hpp"
+#include "resources/texture_manager.hpp"
 
-namespace kine
+namespace kine::resource
 {
-FontManager::FontManager(ResourceManager& rm) : resources(rm) { FT_Init_FreeType(&library); }
-FontManager::~FontManager() { FT_Done_FreeType(library); };
 
-Font& FontManager::load(const std::string& name, const std::string& file, int pixel_height)
+Font& load_font(const std::string& name, const std::string& file, int pixel_height)
 {
     if (fonts.contains(name)) return fonts.at(name);
 
     LOG_INFO("FontManager: Loading font %s", name.c_str());
 
     FT_Face face{};
-    const std::string path = resources.get_path(file);
+    const std::string path = resource::get_path(file);
 
     if (FT_New_Face(library, path.c_str(), 0, &face)) LOG_THROW("FreeType: Failed to load font %s", path.c_str());
 
@@ -26,7 +25,7 @@ Font& FontManager::load(const std::string& name, const std::string& file, int pi
     uint32_t atlas_w = 0;
     uint32_t atlas_h = 0;
 
-    // First pass: measure atlas
+    // measure atlas
     for (uint32_t c = first; c <= last; ++c)
     {
         if (FT_Load_Char(face, c, FT_LOAD_RENDER)) continue;
@@ -93,9 +92,8 @@ Font& FontManager::load(const std::string& name, const std::string& file, int pi
 
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    auto& textures = resources.textures();
-    textures.add(name, std::move(tex));
-    font.texture = &textures.get(name);
+    add_texture(name, std::move(tex));
+    font.texture = &get_texture(name);
 
     FT_Done_Face(face);
 
@@ -103,11 +101,11 @@ Font& FontManager::load(const std::string& name, const std::string& file, int pi
     return fonts.at(name);
 }
 
-Font& FontManager::get(const std::string& name)
+Font& get_font(const std::string& name)
 {
     if (fonts.contains(name)) return fonts.at(name);
 
     LOG_ERROR("FontManager: Font not found %s", name.c_str());
     return fonts.begin()->second;
 }
-}  // namespace kine
+}  // namespace kine::resource

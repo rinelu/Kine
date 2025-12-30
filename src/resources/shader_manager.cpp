@@ -1,28 +1,19 @@
-#include <fstream>
-#include <sstream>
 #include <stdexcept>
 #include "resources/resource_manager.hpp"
 
-namespace kine
+namespace kine ::resource
 {
 
-ShaderManager::ShaderManager(ResourceManager& rm) : resources(rm) {}
-
-ShaderManager::~ShaderManager()
-{
-    for (auto& [_, shader] : shaders) glDeleteProgram(shader.program);
-}
-
-Shader& ShaderManager::load(const std::string& name, const std::string& vertex, const std::string& fragment)
+Shader& load_shader(const std::string& name, const std::string& vertex, const std::string& fragment)
 {
     LOG_INFO("ShaderManager: Loading shader : %s", name.c_str());
     if (shaders.contains(name)) return shaders[name];
 
-    std::string vert_src = read_file(resources.get_path(vertex));
-    std::string frag_src = read_file(resources.get_path(fragment));
+    std::string vert_src = read_file(resource::get_path(vertex));
+    std::string frag_src = read_file(resource::get_path(fragment));
 
-    GLuint vs = compile(GL_VERTEX_SHADER, vert_src);
-    GLuint fs = compile(GL_FRAGMENT_SHADER, frag_src);
+    GLuint vs = compile_shader(GL_VERTEX_SHADER, vert_src);
+    GLuint fs = compile_shader(GL_FRAGMENT_SHADER, frag_src);
 
     GLuint program = glCreateProgram();
     glAttachShader(program, vs);
@@ -36,19 +27,9 @@ Shader& ShaderManager::load(const std::string& name, const std::string& vertex, 
     return shaders[name];
 }
 
-Shader& ShaderManager::get(const std::string& name) { return shaders.at(name); }
+Shader& get_shader(const std::string& name) { return shaders.at(name); }
 
-std::string ShaderManager::read_file(const std::string& path)
-{
-    std::ifstream file(path);
-    if (!file) LOG_THROW("ShaderManager: Failed to open shader %s", path.c_str());
-
-    std::stringstream ss;
-    ss << file.rdbuf();
-    return ss.str();
-}
-
-GLuint ShaderManager::compile(GLenum type, const std::string& src)
+GLuint compile_shader(GLenum type, const std::string& src)
 {
     GLuint shader = glCreateShader(type);
     const char* c = src.c_str();
@@ -67,4 +48,4 @@ GLuint ShaderManager::compile(GLenum type, const std::string& src)
     return shader;
 }
 
-}  // namespace kine
+}  // namespace kine::resource
