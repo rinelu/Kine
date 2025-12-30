@@ -28,26 +28,26 @@ void FlowTree::fixed_update(float fixed_dt)
 void FlowTree::attach_recursive(FlowObject* obj)
 {
     obj->entity = ecs_.create();
-    obj->on_attach(ecs_);
+    obj->on_attach();
 
     for (auto& c : obj->children) attach_recursive(c.get());
 }
 
 void FlowTree::init_recursive(FlowObject* obj)
 {
-    obj->init(ecs_);
+    obj->init();
     for (auto& c : obj->children) init_recursive(c.get());
 }
 
 void FlowTree::update_recursive(FlowObject* obj, float dt)
 {
-    obj->update(ecs_, dt);
+    obj->update(dt);
     for (auto& c : obj->children) update_recursive(c.get(), dt);
 }
 
 void FlowTree::fixed_update_recursive(FlowObject* obj, float fixed_dt)
 {
-    obj->fixed_update(ecs_, fixed_dt);
+    obj->fixed_update(fixed_dt);
     for (auto& c : obj->children) fixed_update_recursive(c.get(), fixed_dt);
 }
 }  // namespace kine

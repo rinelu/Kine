@@ -4,6 +4,7 @@
 #include "core/time.hpp"
 #include "flow/flow_tree.hpp"
 #include "io/input.hpp"
+#include "render/render_list.hpp"
 #include "render/renderer.hpp"
 #include "render/window.hpp"
 #include "resources/resource_manager.hpp"

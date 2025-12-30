@@ -1,5 +1,4 @@
 #include "kine.hpp"
-#include "render/render_list.hpp"
 
 namespace kine
 {
@@ -50,6 +49,7 @@ void shutdown()
 {
     resource_manager->shutdown();
     renderer->shutdown();
+    scheduler::shutdown();
 
 #define RESET(x) \
     delete x;    \

@@ -14,6 +14,7 @@ class FlowTree
     {
         root = std::make_unique<T>(std::forward<Args>(args)...);
         root->name = name;
+        root->entity = ecs_.create();
 
         LOG_DEBUG("FlowTree: Creating root ", name);
         return static_cast<T*>(root.get());

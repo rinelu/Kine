@@ -16,13 +16,13 @@ class FlowObject
     FlowObject* parent = nullptr;
     std::vector<std::unique_ptr<FlowObject>> children;
 
-    Entity entity{entt::null};
+    Entity entity;
 
-    virtual void on_attach(ECS&) {}
-    virtual void on_detach(ECS&) {}
-    virtual void init(ECS&) {}
-    virtual void update(ECS&, float) {}
-    virtual void fixed_update(ECS&, float) {}
+    virtual void on_attach() {}
+    virtual void on_detach() {}
+    virtual void init() {}
+    virtual void update(float) {}
+    virtual void fixed_update(float) {}
 
     template <typename T, typename... Args>
     T* add_child(const std::string& child_name, Args&&... args)
@@ -32,6 +32,7 @@ class FlowObject
         auto child = std::make_unique<T>(std::forward<Args>(args)...);
         child->name = child_name;
         child->parent = this;
+        child->entity = entity.get_ecs()->create();
 
         T* raw = child.get();
         children.push_back(std::move(child));
