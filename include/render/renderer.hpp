@@ -43,7 +43,7 @@ enum class ScalingMode
 class Renderer
 {
    public:
-    Renderer(ResourceManager* resourceManager, GLFWwindow* _window);
+    Renderer(GLFWwindow* _window);
     ~Renderer();
 
     void init();
@@ -66,11 +66,10 @@ class Renderer
     void draw_text(const RenderCommand* cmd);
 
    private:
-    ResourceManager* resources = nullptr;
     GLFWwindow* window = nullptr;
 
     // Batching
-    std::unique_ptr<RenderBatcher> batcher;
+    RenderBatcher batcher;
     std::vector<Vertex> cpu_vertices;
     GLuint current_texture = 0;
 

@@ -12,16 +12,17 @@
 namespace kine
 {
 
-Renderer::Renderer(ResourceManager* resourceManager, GLFWwindow* _window) : resources(resourceManager), window(_window)
-{
-    batcher = std::make_unique<RenderBatcher>(resourceManager);
-}
+Renderer::Renderer(GLFWwindow* _window) : window(_window) { render_batcher::create(&batcher); }
 
-Renderer::~Renderer() { shutdown(); }
+Renderer::~Renderer()
+{
+    render_batcher::reset(&batcher);
+    shutdown();
+}
 
 void Renderer::init()
 {
-    auto screen = resources->shaders().load("screen", "shaders/screen.vert", "shaders/screen.frag");
+    auto screen = resource::load_shader("screen", "shaders/screen.vert", "shaders/screen.frag");
     shader = screen.program;
 
     glEnable(GL_BLEND);
@@ -31,7 +32,7 @@ void Renderer::init()
 
     if (virtual_enabled)
     {
-        auto blit = resources->shaders().load("blit", "shaders/blit.vert", "shaders/blit.frag");
+        auto blit = resource::load_shader("blit", "shaders/blit.vert", "shaders/blit.frag");
         blit_shader = blit.program;
 
         create_blit_objects();
@@ -174,7 +175,7 @@ void Renderer::render()
 {
     // begin_frame();
 
-    batcher->build(render::get());
+    render_batcher::build(&batcher, render::get());
 
     if (virtual_enabled)
         draw_batches_virtual();
@@ -283,7 +284,7 @@ void Renderer::push_quad(const Vertex& a, const Vertex& b, const Vertex& c, cons
 
 void Renderer::draw_batches()
 {
-    const auto& batches = batcher->get();
+    const auto& batches = batcher.batches;
     for (const RenderBatch& batch : batches)
     {
         for (const RenderCommand* cmd : batch.commands)

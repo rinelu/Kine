@@ -5,8 +5,6 @@
 namespace kine
 {
 
-class ResourceManager;
-
 struct RenderBatch
 {
     int32_t layer;
@@ -14,27 +12,20 @@ struct RenderBatch
     Texture2D* texture;
     std::vector<const RenderCommand*> commands;
 };
-;
 
-// Groups render commands into texture-based batches.
-class RenderBatcher
+struct RenderBatcher
 {
-   public:
-    RenderBatcher(ResourceManager* resources);
-
-    // Builds sorted and batched render groups from raw commands.
-    void build(const std::vector<RenderCommand>& commands);
-
-    // Provides read-only access to the generated batches.
-    const std::vector<RenderBatch>& get() const;
-
-   private:
-    ResourceManager* resource_manager{nullptr};
-
     // Temporary sorted command list (pointers only).
     std::vector<const RenderCommand*> sorted;
-
     std::vector<RenderBatch> batches;
 };
 
-}  // namespace sf
+namespace render_batcher
+{
+    void create(RenderBatcher* rb);
+    void reset(RenderBatcher* rb);
+
+    // Builds sorted and batched render groups from raw commands.
+    void build(RenderBatcher* rb, const std::vector<RenderCommand>& commands);
+}  // namespace render_batcher
+}  // namespace kine

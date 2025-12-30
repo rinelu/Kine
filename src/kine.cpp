@@ -8,16 +8,17 @@ void create(int width, int height, const char* title)
     scheduler::init();
     render::init();
     window::create(width, height, title);
+    resource::create();
+
     input = new Input();
-    resource_manager = new ResourceManager();
-    renderer = new Renderer(resource_manager, window::get());
+    renderer = new Renderer(window::get());
 
     flow_tree = new FlowTree();
 }
 
 void init()
 {
-    resource_manager->init();
+    resource::init();
     renderer->init();
     input->init(window::get());
     running = true;
@@ -47,7 +48,7 @@ void render_frame() { renderer->render(); }
 
 void shutdown()
 {
-    resource_manager->shutdown();
+    resource::shutdown();
     renderer->shutdown();
     scheduler::shutdown();
 
@@ -57,7 +58,6 @@ void shutdown()
 
     RESET(flow_tree);
     RESET(input);
-    RESET(resource_manager);
     RESET(renderer);
 #undef RESET
 }
