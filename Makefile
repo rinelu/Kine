@@ -122,7 +122,8 @@ deps: $(EXTERNAL_DIR)
 		tmp=$$(mktemp -d); \
 		$(DOWNLOAD) "$(ENTT_URL)" > "$$tmp/entt.zip"; \
 		unzip -q "$$tmp/entt.zip" -d "$$tmp"; \
-		cp -r "$$tmp"/entt-*/single_include/* $(EXTERNAL_DIR)/entt/; \
+		mkdir -p $(EXTERNAL_DIR)/entt/entt; \
+		cp -r "$$tmp"/entt-*/single_include/* $(EXTERNAL_DIR)/entt; \
 		rm -rf "$$tmp"; \
 	else echo "EnTT already present"; fi
 
@@ -155,8 +156,7 @@ deps: $(EXTERNAL_DIR)
 			-DFT_DISABLE_HARFBUZZ=ON; \
 		cmake --build "$$tmp/freetype-build" -- -j$(JOBS); \
 		mkdir -p $(EXTERNAL_DIR)/freetype/include $(EXTERNAL_DIR)/freetype/lib; \
-		cp "$$tmp"/freetype-$(FREETYPE_VERSION)/include/ft2build.h $(EXTERNAL_DIR)/freetype/include/ \
-		cp -r "$$tmp"/freetype-$(FREETYPE_VERSION)/include/freetype $(EXTERNAL_DIR)/freetype/include/ \
+		cp -r "$$tmp"/freetype-$(FREETYPE_VERSION)/include/* $(EXTERNAL_DIR)/freetype/include/; \
 		cp "$$tmp"/freetype-build/libfreetype.a $(EXTERNAL_DIR)/freetype/lib/; \
 		rm -rf "$$tmp"; \
 	else echo "FreeType already present"; fi
