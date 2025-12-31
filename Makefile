@@ -191,7 +191,13 @@ deps: $(EXTERNAL_DIR)
 		mkdir -p $(EXTERNAL_DIR)/lua-src; \
 		tar -xzf "$$tmp" -C $(EXTERNAL_DIR)/lua-src --strip-components=1; \
 		rm -f "$$tmp"; \
-		$(MAKE) -C $(EXTERNAL_DIR)/lua-src linux MYCFLAGS="-fPIC"; \
+		if [ "$$(uname -s)" = "Linux" ]; then \
+			$(MAKE) -C $(EXTERNAL_DIR)/lua-src linux MYCFLAGS="-fPIC"; \
+		elif [ "$$(uname -s)" = "Darwin" ]; then \
+			$(MAKE) -C $(EXTERNAL_DIR)/lua-src macosx MYCFLAGS="-fPIC"; \
+		else \
+			$(MAKE) -C $(EXTERNAL_DIR)/lua-src mingw MYCFLAGS="-fPIC"; \
+		fi; \
 		mkdir -p $(EXTERNAL_DIR)/lua/include $(EXTERNAL_DIR)/lua/lib; \
 		cp $(EXTERNAL_DIR)/lua-src/src/*.h $(EXTERNAL_DIR)/lua/include/; \
 		cp $(EXTERNAL_DIR)/lua-src/src/liblua.a $(EXTERNAL_DIR)/lua/lib/; \

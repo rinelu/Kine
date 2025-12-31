@@ -71,7 +71,7 @@ static LogLevel log_min_level = LOG_INFO;
 
 static MAYBE_UNUSED void log_write(LogLevel level, const char* fmt, ...) PRINTF_FORMAT(2, 3);
 
-static void log_default_handler(LogLevel level, const char* fmt, va_list args);
+static void log_default_handler(LogLevel level, const char* fmt, va_list args) PRINTF_FORMAT(2, 0);
 
 typedef void(LogHandler)(LogLevel level, const char* fmt, va_list args);
 
@@ -164,7 +164,7 @@ static void log_get_time(char* buf, size_t size)
     strftime(buf, size, "%H:%M:%S", &tm);
 }
 
-static void log_default_handler(LogLevel level, const char* fmt, va_list args)
+void log_default_handler(LogLevel level, const char* fmt, va_list args)
 {
     char time_buf[16];
     log_get_time(time_buf, sizeof(time_buf));
@@ -173,7 +173,7 @@ static void log_default_handler(LogLevel level, const char* fmt, va_list args)
     fprintf(stdout, "[%s] %s%s ", time_buf, log_level_color(level), log_level_name(level));
 
     // Message
-    vfprintf(stdout, fmt, args);
+    vfprintf(stdout, fmt, args);  // THIS IS THE ERROR
 
     // Reset color
     if (log_use_color) fputs("\033[0m", stdout);
