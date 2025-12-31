@@ -84,7 +84,7 @@ void build()
 
         if (!fs::exists(root))
         {
-            LOG_WARN("ResourceManager: {} not found", dir.c_str());
+            LOG_WARN("ResourceManager: {} not found", dir.string());
             continue;
         }
 
@@ -101,8 +101,8 @@ void build()
             // relative.replace_extension("");
 
             std::string key = relative.generic_string();
-            LOG_TRACE("ResourceManager: Indexing {}", key.c_str());
-            if (file_index.contains(key)) LOG_WARN("ResourceManager: {} is duplicate asset key", key.c_str());
+            LOG_TRACE("ResourceManager: Indexing {}", key);
+            if (file_index.contains(key)) LOG_WARN("ResourceManager: {} is duplicate asset key", key);
             file_index[key] = path.string();
         }
     }
@@ -111,7 +111,7 @@ void build()
 const std::string& get_path(const std::string& name)
 {
     auto it = file_index.find(name);
-    if (it == file_index.end()) LOG_THROW("ResourceManager: {} not indexed", name.c_str());
+    if (it == file_index.end()) LOG_THROW("ResourceManager: {} not indexed", name);
 
     return it->second;
 }
@@ -119,7 +119,7 @@ const std::string& get_path(const std::string& name)
 const std::string read_file(const std::string& path)
 {
     std::ifstream file(path);
-    if (!file) LOG_THROW("ResourceManager: Failed to open file {}", path.c_str());
+    if (!file) LOG_THROW("ResourceManager: Failed to open file {}", path);
 
     std::stringstream ss;
     ss << file.rdbuf();

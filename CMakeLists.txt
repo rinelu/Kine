@@ -95,7 +95,7 @@ target_sources(Kine PRIVATE $<TARGET_OBJECTS:glad>)
 target_link_libraries(Kine PRIVATE
     glad
     ${GLFW_LIB_DIR}/libglfw3.a
-    freetype
+    ${FT_LIB_DIR}/libfreetype.a
     brotlidec
     brotlicommon
     z

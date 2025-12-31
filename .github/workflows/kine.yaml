@@ -12,7 +12,7 @@ jobs:
       - name: Install dependencies
         run: |
           brew update
-          brew install cmake ninja curl unzip
+          brew install cmake ninja curl unzip brotli zlib libpng
 
       - name: Build dependencies
         run: |
