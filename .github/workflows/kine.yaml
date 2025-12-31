@@ -1,0 +1,92 @@
+name: Kine Build
+
+on: [push, pull_request]
+
+jobs:
+  macos:
+    runs-on: macos-latest
+    steps:
+      - name: Clone GIT repo
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          brew update
+          brew install cmake ninja curl unzip
+
+      - name: Build dependencies
+        run: |
+          make deps
+
+      - name: Build project
+        run: |
+          make build CMAKE_BUILD_TYPE=Debug
+
+  ubuntu:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        cc: [gcc, clang]
+
+    steps:
+      - name: Clone GIT repo
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            cmake \
+            ninja-build \
+            xorg-dev \
+            libx11-dev \
+            libxrandr-dev \
+            libxinerama-dev \
+            libxcursor-dev \
+            libxi-dev \
+            wayland-protocols \
+            libwayland-dev \
+            libxkbcommon-dev \
+            libgl1-mesa-dev \
+            curl \
+            unzip
+
+      - name: Build dependencies
+        run: |
+          make deps
+
+      - name: Build project
+        run: |
+          CC=${{ matrix.cc }} CXX=${{ matrix.cc }}++ \
+          make build CMAKE_BUILD_TYPE=Debug
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - name: Clone GIT repo
+        uses: actions/checkout@v4
+
+      - name: Setup MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-cmake
+            mingw-w64-x86_64-ninja
+            make
+            git
+            curl
+            unzip
+
+      - name: Build dependencies
+        shell: msys2 {0}
+        run: |
+          make deps
+
+      - name: Build project
+        shell: msys2 {0}
+        run: |
+          make build CMAKE_BUILD_TYPE=Debug
