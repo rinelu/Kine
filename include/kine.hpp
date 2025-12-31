@@ -14,10 +14,10 @@ namespace kine
 
 inline bool running = false;
 
-inline Renderer* renderer = nullptr;
+inline Renderer2D renderer;
+inline Input global_input;
 
 inline FlowTree* flow_tree = nullptr;
-inline Input* input = nullptr;
 
 inline float delta_time() { return time::dt; }
 

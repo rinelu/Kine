@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 project(Kine LANGUAGES C CXX)
 
-if (CMAKE_BUILD_TYPE STREQUAL "Release")
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
     set(BUILD_SHARED_LIBS OFF)
     message(STATUS "Release build: STATIC linking enabled")
 else()
@@ -103,7 +103,7 @@ target_link_libraries(Kine PRIVATE
     lua
 )
 
-if (WIN32 AND CMAKE_BUILD_TYPE STREQUAL "Release")
+if(WIN32 AND CMAKE_BUILD_TYPE STREQUAL "Release")
     target_link_options(Kine PRIVATE
         -static
         -static-libgcc
@@ -135,7 +135,7 @@ set_target_properties(Kine PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin
 )
 
-if (MSVC)
+if(MSVC)
     target_compile_options(Kine PRIVATE
         /W4
         /WX
@@ -146,7 +146,6 @@ else()
     target_compile_options(Kine PRIVATE
         -Wall
         -Wextra
-        -Wpedantic
         -Werror
         -Wshadow
         -Wnon-virtual-dtor

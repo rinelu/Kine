@@ -1,6 +1,7 @@
 #include "render/renderer.hpp"
 #include <algorithm>
 #include <memory>
+#include "render/window.hpp"
 
 #define GL_CHECK()                                              \
     do                                                          \
@@ -9,74 +10,90 @@
         if (err != GL_NO_ERROR) LOG_ERROR("GL error: %u", err); \
     } while (0)
 
-namespace kine
+namespace kine::renderer2d
 {
 
-Renderer::Renderer(GLFWwindow* _window) : window(_window) { render_batcher::create(&batcher); }
-
-Renderer::~Renderer()
+void create(Renderer2D* r)
 {
-    render_batcher::reset(&batcher);
-    shutdown();
+    r->window = window::get();
+    render_batcher::create(&r->batcher);
 }
 
-void Renderer::init()
+void init(Renderer2D* r)
 {
     auto screen = resource::load_shader("screen", "shaders/screen.vert", "shaders/screen.frag");
-    shader = screen.program;
+    r->shader = screen.program;
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    create_gl_objects();
+    create_gl_objects(r);
 
-    if (virtual_enabled)
+    if (r->virtual_enabled)
     {
         auto blit = resource::load_shader("blit", "shaders/blit.vert", "shaders/blit.frag");
-        blit_shader = blit.program;
+        r->blit_shader = blit.program;
 
-        create_blit_objects();
-        glUseProgram(blit_shader);
-        glUniform1i(glGetUniformLocation(blit_shader, "uTexture"), 0);
+        create_blit_objects(r);
+        glUseProgram(r->blit_shader);
+        glUniform1i(glGetUniformLocation(r->blit_shader, "uTexture"), 0);
     }
 
-    glUseProgram(shader);
-    glUniform1i(glGetUniformLocation(shader, "uTexture"), 0);
+    glUseProgram(r->shader);
+    glUniform1i(glGetUniformLocation(r->shader, "uTexture"), 0);
 }
 
-void Renderer::shutdown()
+void shutdown(Renderer2D* r)
 {
-    destroy_gl_objects();
-    destroy_blit_objects();
+    render_batcher::reset(&r->batcher);
 
-    if (virtual_enabled)
+    destroy_gl_objects(r);
+    destroy_blit_objects(r);
+
+    if (r->virtual_enabled)
     {
-        glDeleteFramebuffers(1, &virtual_fbo);
-        glDeleteTextures(1, &virtual_color);
-        glDeleteRenderbuffers(1, &virtual_rbo);
-        virtual_enabled = false;
+        glDeleteFramebuffers(1, &r->virtual_fbo);
+        glDeleteTextures(1, &r->virtual_color);
+        glDeleteRenderbuffers(1, &r->virtual_rbo);
+        r->virtual_enabled = false;
     }
 
-    if (window)
+    // TODO: Move to window.hpp
+    if (r->window)
     {
-        glfwDestroyWindow(window);
-        window = nullptr;
+        glfwDestroyWindow(r->window);
+        r->window = nullptr;
     }
     glfwTerminate();
 }
 
-void Renderer::begin_frame() {}
-void Renderer::end_frame() {}
+void begin_frame(Renderer2D*) {}
+void render(Renderer2D* r)
+{
+    // begin_frame();
 
-void Renderer::set_virtual_resolution(int width, int height)
+    render_batcher::build(&r->batcher, render::get());
+
+    if (r->virtual_enabled)
+        draw_batches_virtual(r);
+    else
+        draw_batches_direct(r);
+
+    end_frame(r);
+    glfwSwapBuffers(r->window);
+    render::clear();
+}
+void end_frame(Renderer2D*) {}
+
+void set_virtual_resolution(Renderer2D* r, int width, int height)
 {
     LOG_INFO("Renderer: enabling virtual resolution  %ux%u", width, height);
 
-    if (virtual_enabled)
+    if (r->virtual_enabled)
     {
-        glDeleteFramebuffers(1, &virtual_fbo);
-        glDeleteTextures(1, &virtual_color);
-        glDeleteRenderbuffers(1, &virtual_rbo);
+        glDeleteFramebuffers(1, &r->virtual_fbo);
+        glDeleteTextures(1, &r->virtual_color);
+        glDeleteRenderbuffers(1, &r->virtual_rbo);
     }
 
     if (width <= 0 || height <= 0)
@@ -85,30 +102,30 @@ void Renderer::set_virtual_resolution(int width, int height)
         return;
     }
 
-    virtual_width = width;
-    virtual_height = height;
-    virtual_enabled = true;
+    r->virtual_width = width;
+    r->virtual_height = height;
+    r->virtual_enabled = true;
 
-    glGenFramebuffers(1, &virtual_fbo);
-    glBindFramebuffer(GL_FRAMEBUFFER, virtual_fbo);
+    glGenFramebuffers(1, &r->virtual_fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, r->virtual_fbo);
     // GL_CHECK();
 
     // Texture
-    glGenTextures(1, &virtual_color);
-    glBindTexture(GL_TEXTURE_2D, virtual_color);
+    glGenTextures(1, &r->virtual_color);
+    glBindTexture(GL_TEXTURE_2D, r->virtual_color);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, virtual_color, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, r->virtual_color, 0);
     // GL_CHECK();
 
     // Depth/stencil
-    glGenRenderbuffers(1, &virtual_rbo);
-    glBindRenderbuffer(GL_RENDERBUFFER, virtual_rbo);
+    glGenRenderbuffers(1, &r->virtual_rbo);
+    glBindRenderbuffer(GL_RENDERBUFFER, r->virtual_rbo);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, virtual_rbo);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, r->virtual_rbo);
 
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         LOG_WARN("Renderer: virtual framebuffer incomplete!");
@@ -116,89 +133,166 @@ void Renderer::set_virtual_resolution(int width, int height)
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void Renderer::disable_virtual_resolution()
+void disable_virtual_resolution(Renderer2D* r)
 {
-    if (!virtual_enabled) return;
+    if (!r->virtual_enabled) return;
 
-    glDeleteFramebuffers(1, &virtual_fbo);
-    glDeleteTextures(1, &virtual_color);
-    glDeleteRenderbuffers(1, &virtual_rbo);
-    virtual_enabled = false;
+    glDeleteFramebuffers(1, &r->virtual_fbo);
+    glDeleteTextures(1, &r->virtual_color);
+    glDeleteRenderbuffers(1, &r->virtual_rbo);
+    r->virtual_enabled = false;
 }
 
-void Renderer::compute_virtual_scaling(int window_w, int window_h)
+void compute_virtual_scaling(Renderer2D* r, int window_w, int window_h)
 {
-    const float target_aspect = float(virtual_width) / float(virtual_height);
+    const float target_aspect = float(r->virtual_width) / float(r->virtual_height);
     const float window_aspect = float(window_w) / float(window_h);
 
-    switch (scaling_mode)
+    switch (r->scaling_mode)
     {
     case ScalingMode::PixelPerfectInteger:
     {
-        int scale = std::min(window_w / virtual_width, window_h / virtual_height);
+        int scale = std::min(window_w / r->virtual_width, window_h / r->virtual_height);
         if (scale < 1) scale = 1;
 
-        final_scale.x = final_scale.y = float(scale);
-        int scaled_w = virtual_width * scale;
-        int scaled_h = virtual_height * scale;
+        r->final_scale.x = r->final_scale.y = float(scale);
+        int scaled_w = r->virtual_width * scale;
+        int scaled_h = r->virtual_height * scale;
 
-        final_offset.x = (window_w - scaled_w) / 2;
-        final_offset.y = (window_h - scaled_h) / 2;
+        r->final_offset.x = (window_w - scaled_w) / 2;
+        r->final_offset.y = (window_h - scaled_h) / 2;
     }
     break;
 
     case ScalingMode::FreeScale:
-        final_scale.x = float(window_w) / float(virtual_width);
-        final_scale.y = float(window_h) / float(virtual_height);
-        final_offset = vec2(0);
+        r->final_scale.x = float(window_w) / float(r->virtual_width);
+        r->final_scale.y = float(window_h) / float(r->virtual_height);
+        r->final_offset = vec2(0);
         break;
 
     case ScalingMode::LetterboxedAuto:
         if (window_aspect > target_aspect)
         {
-            final_scale.y = float(window_h) / virtual_height;
-            final_scale.x = final_scale.y;
+            r->final_scale.y = float(window_h) / r->virtual_height;
+            r->final_scale.x = r->final_scale.y;
         }
         else
         {
-            final_scale.x = float(window_w) / virtual_width;
-            final_scale.y = final_scale.x;
+            r->final_scale.x = float(window_w) / r->virtual_width;
+            r->final_scale.y = r->final_scale.x;
         }
 
-        final_offset.x = (window_w - int(final_scale.x * virtual_width)) / 2;
-        final_offset.y = (window_h - int(final_scale.y * virtual_height)) / 2;
+        r->final_offset.x = (window_w - int(r->final_scale.x * r->virtual_width)) / 2;
+        r->final_offset.y = (window_h - int(r->final_scale.y * r->virtual_height)) / 2;
         break;
     }
 }
 
-void Renderer::render()
+void draw_batches(Renderer2D* r)
 {
-    // begin_frame();
-
-    render_batcher::build(&batcher, render::get());
-
-    if (virtual_enabled)
-        draw_batches_virtual();
-    else
-        draw_batches_direct();
-
-    end_frame();
-    glfwSwapBuffers(window);
-    render::clear();
+    const auto& batches = r->batcher.batches;
+    for (const RenderBatch& batch : batches)
+    {
+        for (const RenderCommand* cmd : batch.commands)
+        {
+            switch (cmd->type)
+            {
+            case RenderType::Sprite:
+                draw_sprite(r, cmd, static_cast<Texture2D*>(batch.texture));
+                break;
+            case RenderType::Rect:
+                draw_rect(r, cmd);
+                break;
+            case RenderType::Circle:
+                draw_circle(r, cmd);
+                break;
+            case RenderType::Line:
+                draw_line(r, cmd);
+                break;
+            case RenderType::Text:
+                draw_text(r, cmd);
+                break;
+            }
+        }
+    }
 }
 
-void Renderer::create_gl_objects()
+void draw_batches_direct(Renderer2D* r)
+{
+    int w, h;
+    glfwGetFramebufferSize(r->window, &w, &h);
+    glViewport(0, 0, w, h);
+    glClearColor(0.04f, 0.04f, 0.06f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    // glUseProgram(shader);
+    float aspect = float(w) / float(h);
+    glUniform1f(glGetUniformLocation(r->shader, "uAspect"), aspect);
+
+    setup_projection_matrix(r, w, h);
+    glUniformMatrix4fv(glGetUniformLocation(r->shader, "uProjection"), 1, GL_FALSE, &r->projection[0][0]);
+    draw_batches(r);
+    flush_cpu_vertices(r);
+}
+
+void draw_batches_virtual(Renderer2D* r)
+{
+    glDisable(GL_DEPTH_TEST);
+    glBindFramebuffer(GL_FRAMEBUFFER, r->virtual_fbo);
+    // GL_CHECK();
+    glViewport(0, 0, r->virtual_width, r->virtual_height);
+    glClearColor(0.04f, 0.04f, 0.06f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glUseProgram(r->shader);
+    float aspect = float(r->virtual_width) / float(r->virtual_height);
+    glUniform1f(glGetUniformLocation(r->shader, "uAspect"), aspect);
+
+    setup_projection_matrix(r, r->virtual_width, r->virtual_height);
+    glUniformMatrix4fv(glGetUniformLocation(r->shader, "uProjection"), 1, GL_FALSE, &r->projection[0][0]);
+    draw_batches(r);
+    flush_cpu_vertices(r);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    int w, h;
+    glfwGetFramebufferSize(r->window, &w, &h);
+    compute_virtual_scaling(r, w, h);
+
+    glViewport(0, 0, w, h);
+    glClearColor(0, 0, 0, 1);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    glUseProgram(r->blit_shader);
+    GLint scale_loc = glGetUniformLocation(r->blit_shader, "uFinalScale");
+    GLint offset_loc = glGetUniformLocation(r->blit_shader, "uFinalOffset");
+    GLint window_loc = glGetUniformLocation(r->blit_shader, "uWindowSize");
+    GLint virtual_size = glGetUniformLocation(r->blit_shader, "uVirtualSize");
+
+    glUniform2f(virtual_size, r->virtual_width, r->virtual_height);
+    glUniform2f(scale_loc, r->final_scale.x, r->final_scale.y);
+    glUniform2f(offset_loc, r->final_offset.x, r->final_offset.y);
+    glUniform2f(window_loc, (float) w, (float) h);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, r->virtual_color);
+
+    glBindVertexArray(r->blit_vao);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+}
+
+void create_gl_objects(Renderer2D* r)
 {
     LOG_DEBUG("Renderer: creating main VAO/VBO");
 
-    glGenVertexArrays(1, &vao);
-    glGenBuffers(1, &vbo);
+    glGenVertexArrays(1, &r->vao);
+    glGenBuffers(1, &r->vbo);
 
-    glBindVertexArray(vao);
+    glBindVertexArray(r->vao);
     // GL_CHECK();
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, r->vbo);
     // GL_CHECK();
-    glBufferData(GL_ARRAY_BUFFER, MAX_VERTICES * sizeof(Vertex), nullptr, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, r->MAX_VERTICES * sizeof(Vertex), nullptr, GL_DYNAMIC_DRAW);
 
     GLuint attrib = 0;
 #define ATTR(count, type, member)                                                                           \
@@ -219,19 +313,19 @@ void Renderer::create_gl_objects()
     glBindVertexArray(0);
 }
 
-void Renderer::destroy_gl_objects()
+void destroy_gl_objects(Renderer2D* r)
 {
-    if (vbo) glDeleteBuffers(1, &vbo);
-    if (vao) glDeleteVertexArrays(1, &vao);
+    if (r->vbo) glDeleteBuffers(1, &r->vbo);
+    if (r->vao) glDeleteVertexArrays(1, &r->vao);
 }
 
-void Renderer::create_blit_objects()
+void create_blit_objects(Renderer2D* r)
 {
-    glGenVertexArrays(1, &blit_vao);
-    glGenBuffers(1, &blit_vbo);
+    glGenVertexArrays(1, &r->blit_vao);
+    glGenBuffers(1, &r->blit_vbo);
 
-    glBindVertexArray(blit_vao);
-    glBindBuffer(GL_ARRAY_BUFFER, blit_vbo);
+    glBindVertexArray(r->blit_vao);
+    glBindBuffer(GL_ARRAY_BUFFER, r->blit_vbo);
 
     glBufferData(GL_ARRAY_BUFFER, sizeof(blit_vertices), blit_vertices, GL_STATIC_DRAW);
 
@@ -246,168 +340,75 @@ void Renderer::create_blit_objects()
     glBindVertexArray(0);
 }
 
-void Renderer::destroy_blit_objects()
+void destroy_blit_objects(Renderer2D* r)
 {
-    if (blit_vbo)
+    if (r->blit_vbo)
     {
-        glDeleteBuffers(1, &blit_vbo);
-        blit_vbo = 0;
+        glDeleteBuffers(1, &r->blit_vbo);
+        r->blit_vbo = 0;
     }
 
-    if (blit_vao)
+    if (r->blit_vao)
     {
-        glDeleteVertexArrays(1, &blit_vao);
-        blit_vao = 0;
+        glDeleteVertexArrays(1, &r->blit_vao);
+        r->blit_vao = 0;
     }
 }
 
-void Renderer::setup_projection_matrix(int fbW, int fbH)
+void setup_projection_matrix(Renderer2D* r, int width, int height)
 {
-    if (virtual_enabled)
-        projection = glm::ortho(0.0f, (float) virtual_width, (float) virtual_height, 0.0f, -1.0f, 1.0f);
+    if (r->virtual_enabled)
+        r->projection = glm::ortho(0.0f, (float) r->virtual_width, (float) r->virtual_height, 0.0f, -1.0f, 1.0f);
     else
-        projection = glm::ortho(0.0f, (float) fbW, (float) fbH, 0.0f, -1.0f, 1.0f);
+        r->projection = glm::ortho(0.0f, (float) width, (float) height, 0.0f, -1.0f, 1.0f);
 }
 
-void Renderer::push_quad(const Vertex& a, const Vertex& b, const Vertex& c, const Vertex& d)
+void push_quad(Renderer2D* r, const Vertex& a, const Vertex& b, const Vertex& c, const Vertex& d)
 {
     // triangle 1
-    cpu_vertices.push_back(a);
-    cpu_vertices.push_back(b);
-    cpu_vertices.push_back(c);
+    r->cpu_vertices.push_back(a);
+    r->cpu_vertices.push_back(b);
+    r->cpu_vertices.push_back(c);
 
     // triangle 2
-    cpu_vertices.push_back(a);
-    cpu_vertices.push_back(c);
-    cpu_vertices.push_back(d);
+    r->cpu_vertices.push_back(a);
+    r->cpu_vertices.push_back(c);
+    r->cpu_vertices.push_back(d);
 }
 
-void Renderer::draw_batches()
+void flush_cpu_vertices(Renderer2D* r)
 {
-    const auto& batches = batcher.batches;
-    for (const RenderBatch& batch : batches)
+    if (r->cpu_vertices.empty()) return;
+
+    if (r->cpu_vertices.size() > r->MAX_VERTICES)
     {
-        for (const RenderCommand* cmd : batch.commands)
-        {
-            switch (cmd->type)
-            {
-            case RenderType::Sprite:
-                draw_sprite(cmd, static_cast<Texture2D*>(batch.texture));
-                break;
-            case RenderType::Rect:
-                draw_rect(cmd);
-                break;
-            case RenderType::Circle:
-                draw_circle(cmd);
-                break;
-            case RenderType::Line:
-                draw_line(cmd);
-                break;
-            case RenderType::Text:
-                draw_text(cmd);
-                break;
-            }
-        }
-    }
-}
-
-void Renderer::draw_batches_direct()
-{
-    int w, h;
-    glfwGetFramebufferSize(window, &w, &h);
-    glViewport(0, 0, w, h);
-    glClearColor(0.04f, 0.04f, 0.06f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    // glUseProgram(shader);
-    float aspect = float(w) / float(h);
-    glUniform1f(glGetUniformLocation(shader, "uAspect"), aspect);
-
-    setup_projection_matrix(w, h);
-    glUniformMatrix4fv(glGetUniformLocation(shader, "uProjection"), 1, GL_FALSE, &projection[0][0]);
-    draw_batches();
-    flush_cpu_vertices();
-}
-
-void Renderer::draw_batches_virtual()
-{
-    glDisable(GL_DEPTH_TEST);
-    glBindFramebuffer(GL_FRAMEBUFFER, virtual_fbo);
-    // GL_CHECK();
-    glViewport(0, 0, virtual_width, virtual_height);
-    glClearColor(0.04f, 0.04f, 0.06f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    glUseProgram(shader);
-    float aspect = float(virtual_width) / float(virtual_height);
-    glUniform1f(glGetUniformLocation(shader, "uAspect"), aspect);
-
-    setup_projection_matrix(virtual_width, virtual_height);
-    glUniformMatrix4fv(glGetUniformLocation(shader, "uProjection"), 1, GL_FALSE, &projection[0][0]);
-    draw_batches();
-    flush_cpu_vertices();
-
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-    int w, h;
-    glfwGetFramebufferSize(window, &w, &h);
-    compute_virtual_scaling(w, h);
-
-    glViewport(0, 0, w, h);
-    glClearColor(0, 0, 0, 1);
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    glUseProgram(blit_shader);
-    GLint scale_loc = glGetUniformLocation(blit_shader, "uFinalScale");
-    GLint offset_loc = glGetUniformLocation(blit_shader, "uFinalOffset");
-    GLint window_loc = glGetUniformLocation(blit_shader, "uWindowSize");
-    GLint virtual_size = glGetUniformLocation(blit_shader, "uVirtualSize");
-
-    glUniform2f(virtual_size, virtual_width, virtual_height);
-    glUniform2f(scale_loc, final_scale.x, final_scale.y);
-    glUniform2f(offset_loc, final_offset.x, final_offset.y);
-    glUniform2f(window_loc, (float) w, (float) h);
-
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, virtual_color);
-
-    glBindVertexArray(blit_vao);
-    glDrawArrays(GL_TRIANGLES, 0, 6);
-}
-
-void Renderer::flush_cpu_vertices()
-{
-    if (cpu_vertices.empty()) return;
-
-    if (cpu_vertices.size() > MAX_VERTICES)
-    {
-        LOG_ERROR("Renderer: cpu_vertices overflow %zu", cpu_vertices.size());
-        cpu_vertices.clear();
+        LOG_ERROR("Renderer: cpu_vertices overflow %zu", r->cpu_vertices.size());
+        r->cpu_vertices.clear();
         return;
     }
 
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, current_texture ? current_texture : 0);
-    glBindVertexArray(vao);
+    glBindTexture(GL_TEXTURE_2D, r->current_texture ? r->current_texture : 0);
+    glBindVertexArray(r->vao);
     // GL_CHECK();
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, cpu_vertices.size() * sizeof(Vertex), cpu_vertices.data());
+    glBindBuffer(GL_ARRAY_BUFFER, r->vbo);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, r->cpu_vertices.size() * sizeof(Vertex), r->cpu_vertices.data());
 
-    glDrawArrays(GL_TRIANGLES, 0, cpu_vertices.size());
+    glDrawArrays(GL_TRIANGLES, 0, r->cpu_vertices.size());
     // GL_CHECK();
 
-    cpu_vertices.clear();
+    r->cpu_vertices.clear();
 }
 
-void Renderer::set_texture(GLuint texture)
+void set_texture(Renderer2D* r, GLuint texture)
 {
-    if (current_texture == texture) return;
-    flush_cpu_vertices();
-    current_texture = texture;
+    if (r->current_texture == texture) return;
+    flush_cpu_vertices(r);
+    r->current_texture = texture;
 }
 
-void Renderer::emit_quad(const vec2& position, const vec2& size, const vec2& origin, float rotation_rad,
-                         const vec4& color, float type, const vec2 uv[4])
+void emit_quad(Renderer2D* r, const vec2& position, const vec2& size, const vec2& origin, float rotation_rad,
+               const vec4& color, float type, const vec2 uv[4])
 {
     Vertex v[4]{};
 
@@ -431,13 +432,13 @@ void Renderer::emit_quad(const vec2& position, const vec2& size, const vec2& ori
         v[i].type = type;
     }
 
-    push_quad(v[0], v[1], v[2], v[3]);
+    push_quad(r, v[0], v[1], v[2], v[3]);
 }
 
-void Renderer::draw_sprite(const RenderCommand* cmd, const Texture2D* tex)
+void draw_sprite(Renderer2D* r, const RenderCommand* cmd, const Texture2D* tex)
 {
     if (!tex) return;
-    set_texture(tex->id);
+    set_texture(r, tex->id);
 
     const vec2 size(float(tex->width), float(tex->height));
 
@@ -446,31 +447,32 @@ void Renderer::draw_sprite(const RenderCommand* cmd, const Texture2D* tex)
     const vec4 color(cmd->color[0] / 255.f, cmd->color[1] / 255.f, cmd->color[2] / 255.f, cmd->color[3] / 255.f);
     const vec2 uvs[4] = {{0, 1}, {1, 1}, {1, 0}, {0, 0}};
 
-    emit_quad({cmd->x, cmd->y}, size, origin, rot, color,
+    emit_quad(r, {cmd->x, cmd->y}, size, origin, rot, color,
               0.f,  // sprite
               uvs);
 }
 
-void Renderer::draw_rect(const RenderCommand* cmd)
+void draw_rect(Renderer2D* r, const RenderCommand* cmd)
 {
     vec4 color(cmd->color[0] / 255.f, cmd->color[1] / 255.f, cmd->color[2] / 255.f, cmd->color[3] / 255.f);
-    emit_quad({cmd->x, cmd->y}, {cmd->width, cmd->height}, {cmd->pivotX * cmd->width, cmd->pivotY * cmd->height},
+    emit_quad(r, {cmd->x, cmd->y}, {cmd->width, cmd->height}, {cmd->pivotX * cmd->width, cmd->pivotY * cmd->height},
               glm::radians(cmd->rotation), color,
               1.f,  // rect
               nullptr);
 }
 
-void Renderer::draw_circle(const RenderCommand* cmd)
+void draw_circle(Renderer2D* r, const RenderCommand* cmd)
 {
     vec4 color(cmd->color[0] / 255.f, cmd->color[1] / 255.f, cmd->color[2] / 255.f, cmd->color[3] / 255.f);
     const glm::vec2 uvs[4] = {vec2{0}, {1, 0}, {1, 1}, {0, 1}};
 
-    emit_quad({cmd->x, cmd->y}, vec2{cmd->radius * 2.f}, {cmd->radius, cmd->radius}, glm::radians(cmd->rotation), color,
+    emit_quad(r, {cmd->x, cmd->y}, vec2{cmd->radius * 2.f}, {cmd->radius, cmd->radius}, glm::radians(cmd->rotation),
+              color,
               2.f,  // circle
               uvs);
 }
 
-void Renderer::draw_line(const RenderCommand* cmd)
+void draw_line(Renderer2D* r, const RenderCommand* cmd)
 {
     vec2 delta(cmd->x2 - cmd->x, cmd->y2 - cmd->y);
     float length = glm::length(delta);
@@ -478,17 +480,17 @@ void Renderer::draw_line(const RenderCommand* cmd)
 
     float angle = std::atan2(delta.y, delta.x);
 
-    emit_quad({cmd->x, cmd->y}, {length, cmd->radius * 2.f}, {0.f, cmd->radius}, angle, color,
+    emit_quad(r, {cmd->x, cmd->y}, {length, cmd->radius * 2.f}, {0.f, cmd->radius}, angle, color,
               3.f,  // line
               nullptr);
 }
 
-void Renderer::draw_text(const RenderCommand* cmd)
+void draw_text(Renderer2D* r, const RenderCommand* cmd)
 {
     if (!cmd || !cmd->font || cmd->text.empty()) return;
 
     const Font& font = *cmd->font;
-    set_texture(font.texture->id);
+    set_texture(r, font.texture->id);
 
     const vec4 color(cmd->color[0] / 255.f, cmd->color[1] / 255.f, cmd->color[2] / 255.f, cmd->color[3] / 255.f);
     const float rotation = glm::radians(cmd->rotation);
@@ -536,11 +538,11 @@ void Renderer::draw_text(const RenderCommand* cmd)
         const vec2 glyph_pos(cmd->x + pen.x + g.bearing.x * scale, baseline - g.bearing.y * scale);
         const vec2 glyph_size(g.size.x * scale, g.size.y * scale);
 
-        emit_quad(glyph_pos, glyph_size, origin, rotation, color,
+        emit_quad(r, glyph_pos, glyph_size, origin, rotation, color,
                   4.f,  // text
                   g.uv);
         pen.x += g.advance * scale;
     }
 }
 
-}  // namespace kine
+}  // namespace kine::renderer2d

@@ -1,4 +1,5 @@
 #include "kine.hpp"
+#include "io/input.hpp"
 
 namespace kine
 {
@@ -10,8 +11,8 @@ void create(int width, int height, const char* title)
     window::create(width, height, title);
     resource::create();
 
-    input = new Input();
-    renderer = new Renderer(window::get());
+    input::create(&global_input);
+    renderer2d::create(&renderer);
 
     flow_tree = new FlowTree();
 }
@@ -19,15 +20,16 @@ void create(int width, int height, const char* title)
 void init()
 {
     resource::init();
-    renderer->init();
-    input->init(window::get());
+    renderer2d::init(&renderer);
+    input::init(&global_input);
+
     running = true;
 }
 
 void begin_frame()
 {
     time::begin_frame();
-    input->begin_frame();
+    input::begin_frame(&global_input);
     if (window::should_close()) running = false;
 
     glfwPollEvents();
@@ -44,12 +46,13 @@ void update()
     scheduler::fixed_update(flow_tree->ecs(), time::accumulator, time::fixed_dt, time::alpha);
 }
 
-void render_frame() { renderer->render(); }
+void render_frame() { renderer2d::render(&renderer); }
 
 void shutdown()
 {
+    input::shutdown(&global_input);
     resource::shutdown();
-    renderer->shutdown();
+    renderer2d::shutdown(&renderer);
     scheduler::shutdown();
 
 #define RESET(x) \
@@ -57,8 +60,6 @@ void shutdown()
     x = nullptr;
 
     RESET(flow_tree);
-    RESET(input);
-    RESET(renderer);
 #undef RESET
 }
 

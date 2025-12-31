@@ -40,32 +40,8 @@ enum class ScalingMode
     LetterboxedAuto       // Preserve aspect ratio
 };
 
-class Renderer
+struct Renderer2D
 {
-   public:
-    Renderer(GLFWwindow* _window);
-    ~Renderer();
-
-    void init();
-    void shutdown();
-
-    void begin_frame();
-    void end_frame();
-    void render();
-
-    // Virtual resolution system
-    void set_virtual_resolution(int width, int height);
-    void disable_virtual_resolution();
-    void compute_virtual_scaling(int windowW, int windowH);
-
-    // Command handlers
-    void draw_sprite(const RenderCommand* cmd, const Texture2D* tex);
-    void draw_rect(const RenderCommand* cmd);
-    void draw_circle(const RenderCommand* cmd);
-    void draw_line(const RenderCommand* cmd);
-    void draw_text(const RenderCommand* cmd);
-
-   private:
     GLFWwindow* window = nullptr;
 
     // Batching
@@ -100,32 +76,55 @@ class Renderer
     GLuint blit_vao = 0;
     GLuint blit_vbo = 0;
     GLuint blit_shader = 0;
+};
 
+namespace renderer2d
+{
     static constexpr BlitVertex blit_vertices[6] = {
         {{-1.f, -1.f}, {0.f, 0.f}}, {{1.f, -1.f}, {1.f, 0.f}}, {{1.f, 1.f}, {1.f, 1.f}},
         {{-1.f, -1.f}, {0.f, 0.f}}, {{1.f, 1.f}, {1.f, 1.f}},  {{-1.f, 1.f}, {0.f, 1.f}},
     };
 
-    void create_gl_objects();
-    void destroy_gl_objects();
+    void create(Renderer2D* r);
+    void init(Renderer2D* r);
+    void shutdown(Renderer2D* r);
 
-    void create_blit_objects();
-    void destroy_blit_objects();
+    void begin_frame(Renderer2D* r);
+    void render(Renderer2D* r);
+    void end_frame(Renderer2D* r);
 
-    void set_texture(GLuint texture);
-    void draw_batches();
-    void draw_batches_direct();
-    void draw_batches_virtual();
+    // Virtual resolution system
+    void set_virtual_resolution(Renderer2D* r, int width, int height);
+    void disable_virtual_resolution(Renderer2D* r);
+    void compute_virtual_scaling(Renderer2D* r, int windowW, int windowH);
 
-    void flush_cpu_vertices();
+    void draw_batches(Renderer2D* r);
+    void draw_batches_direct(Renderer2D* r);
+    void draw_batches_virtual(Renderer2D* r);
 
-    void setup_projection_matrix(int fbW, int fbH);
+    void create_gl_objects(Renderer2D* r);
+    void destroy_gl_objects(Renderer2D* r);
+
+    void create_blit_objects(Renderer2D* r);
+    void destroy_blit_objects(Renderer2D* r);
+
+    void setup_projection_matrix(Renderer2D* r, int width, int height);
+
+    void flush_cpu_vertices(Renderer2D* r);
+
+    void set_texture(Renderer2D* r, GLuint texture);
 
     // Central quad generator used by all primitives
-    void push_quad(const Vertex& a, const Vertex& b, const Vertex& c, const Vertex& d);
+    void push_quad(Renderer2D* r, const Vertex& a, const Vertex& b, const Vertex& c, const Vertex& d);
 
     void emit_quad(const vec2& position, const vec2& size, const vec2& origin, float rotation_rad, const vec4& color,
                    float type, const vec2 uv[4]);
-};
 
+    // Command handlers
+    void draw_sprite(Renderer2D* r, const RenderCommand* cmd, const Texture2D* tex);
+    void draw_rect(Renderer2D* r, const RenderCommand* cmd);
+    void draw_circle(Renderer2D* r, const RenderCommand* cmd);
+    void draw_line(Renderer2D* r, const RenderCommand* cmd);
+    void draw_text(Renderer2D* r, const RenderCommand* cmd);
+}  // namespace renderer2d
 }  // namespace kine

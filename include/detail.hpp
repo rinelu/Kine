@@ -36,9 +36,9 @@ constexpr std::string_view extract(std::string_view wrapped)
 }
 
 template <typename T>
-constexpr std::string_view type_name()
+constexpr const char* type_name()
 {
-    return extract(wrapped_type_name<T>());
+    return extract(wrapped_type_name<T>()).data();
 }
 
 }  // namespace kine::detail
