@@ -113,6 +113,7 @@ deps: $(EXTERNAL_DIR)
 		tmp=$$(mktemp -d); \
 		$(DOWNLOAD) "$(GLM_URL)" > "$$tmp/glm.zip"; \
 		unzip -q "$$tmp/glm.zip" -d "$$tmp"; \
+		mkdir -p $(EXTERNAL_DIR)/glm/glm; \
 		mv "$$tmp"/glm $(EXTERNAL_DIR)/glm || mv "$$tmp"/glm-* $(EXTERNAL_DIR)/glm; \
 		rm -rf "$$tmp"; \
 	else echo "GLM already present"; fi
