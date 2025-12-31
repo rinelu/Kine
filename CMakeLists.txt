@@ -43,6 +43,22 @@ set(SOL2_INCLUDE_DIR       ${EXTERNAL_DIR}/sol2)
 set(LUA_INCLUDE_DIR        ${EXTERNAL_DIR}/lua/include)
 set(LUA_LIB_DIR            ${EXTERNAL_DIR}/lua/lib)
 
+# Brotli
+find_library(BROTLI_DEC_LIB brotlidec REQUIRED)
+find_library(BROTLI_COMMON_LIB brotlicommon REQUIRED)
+
+add_library(Brotli::brotlidec UNKNOWN IMPORTED)
+set_target_properties(Brotli::brotlidec PROPERTIES
+    IMPORTED_LOCATION "${BROTLI_DEC_LIB}"
+    INTERFACE_INCLUDE_DIRECTORIES "${BROTLI_INCLUDE_DIR}"
+)
+
+add_library(Brotli::brotlicommon UNKNOWN IMPORTED)
+set_target_properties(Brotli::brotlicommon PROPERTIES
+    IMPORTED_LOCATION "${BROTLI_COMMON_LIB}"
+    INTERFACE_INCLUDE_DIRECTORIES "${BROTLI_INCLUDE_DIR}"
+)
+
 include_directories(
     ${GLAD_INCLUDE_DIR}
     ${GLFW_INCLUDE_DIR}
@@ -92,14 +108,16 @@ target_link_directories(Kine PRIVATE
 
 target_sources(Kine PRIVATE $<TARGET_OBJECTS:glad>)
 
+find_package(ZLIB REQUIRED)
+find_package(PNG REQUIRED)
 target_link_libraries(Kine PRIVATE
     glad
     ${GLFW_LIB_DIR}/libglfw3.a
     ${FT_LIB_DIR}/libfreetype.a
-    brotlidec
-    brotlicommon
-    z
-    png
+    Brotli::brotlidec
+    Brotli::brotlicommon
+    ZLIB::ZLIB
+    PNG::PNG
     lua
 )
 
