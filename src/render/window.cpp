@@ -1,6 +1,6 @@
 #include "render/window.hpp"
 #include <cstdlib>
-#include "log.h"
+#include "log.hpp"
 
 namespace kine::window
 {

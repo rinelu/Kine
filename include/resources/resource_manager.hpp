@@ -1,9 +1,9 @@
 #pragma once
-#include <log.h>
 #include <string>
 #include <unordered_map>
 #include <vector>
 #include "font_manager.hpp"
+#include "log.hpp"
 #include "resources/texture_manager.hpp"
 #include "shader_manager.hpp"
 

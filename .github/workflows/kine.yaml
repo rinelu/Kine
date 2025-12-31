@@ -58,7 +58,10 @@ jobs:
 
       - name: Build project
         run: |
-          CC=${{ matrix.cc }} CXX=${{ matrix.cc }}++ \
+          if [ "${{ matrix.compiler }}" = "clang" ]; then
+            export CC=clang
+            export CXX=clang++
+          fi
           make build CMAKE_BUILD_TYPE=Debug
 
   windows:

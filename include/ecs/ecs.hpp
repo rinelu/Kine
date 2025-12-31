@@ -5,7 +5,7 @@
 #include <entt/entt.hpp>
 
 #include "detail.hpp"
-#include "log.h"
+#include "log.hpp"
 
 namespace kine
 {
