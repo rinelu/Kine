@@ -20,7 +20,7 @@ bool is_initialized()
 {
     if (!initialized)
     {
-        LOG_ERROR("RenderList: RenderList is not initialized. Perhaps you forgot to initialized the engine.");
+        LOG_ERROR("RenderList: RenderList is not initialized.");
         return false;
     }
     return true;

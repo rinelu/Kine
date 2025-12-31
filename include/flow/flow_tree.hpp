@@ -16,7 +16,7 @@ class FlowTree
         root->name = name;
         root->entity = ecs_.create();
 
-        LOG_DEBUG("FlowTree: Creating root ", name);
+        LOG_DEBUG("FlowTree: Creating root {}", name);
         return static_cast<T*>(root.get());
     }
 

@@ -7,7 +7,7 @@
     do                                                          \
     {                                                           \
         GLenum err = glGetError();                              \
-        if (err != GL_NO_ERROR) LOG_ERROR("GL error: %u", err); \
+        if (err != GL_NO_ERROR) LOG_ERROR("GL error: {}", err); \
     } while (0)
 
 namespace kine::renderer2d
@@ -87,7 +87,7 @@ void end_frame(Renderer2D*) {}
 
 void set_virtual_resolution(Renderer2D* r, int width, int height)
 {
-    LOG_INFO("Renderer: enabling virtual resolution  %ux%u", width, height);
+    LOG_INFO("Renderer: enabling virtual resolution  {}x%u", width, height);
 
     if (r->virtual_enabled)
     {
@@ -98,7 +98,7 @@ void set_virtual_resolution(Renderer2D* r, int width, int height)
 
     if (width <= 0 || height <= 0)
     {
-        LOG_ERROR("Renderer: invalid virtual resolution  %ux%u", width, height);
+        LOG_ERROR("Renderer: invalid virtual resolution  {}x{}", width, height);
         return;
     }
 
@@ -382,7 +382,7 @@ void flush_cpu_vertices(Renderer2D* r)
 
     if (r->cpu_vertices.size() > r->MAX_VERTICES)
     {
-        LOG_ERROR("Renderer: cpu_vertices overflow %zu", r->cpu_vertices.size());
+        LOG_ERROR("Renderer: cpu_vertices overflow {}", r->cpu_vertices.size());
         r->cpu_vertices.clear();
         return;
     }

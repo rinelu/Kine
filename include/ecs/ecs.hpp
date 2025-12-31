@@ -128,7 +128,7 @@ class ECS
     template <typename T>
     T& get_context()
     {
-        if (!reg.ctx().contains<T>()) LOG_THROW("ECS::get_context<%s>: context does not exist", TYPE_NAME(T));
+        if (!reg.ctx().contains<T>()) LOG_THROW("ECS::get_context<{}>: context does not exist", TYPE_NAME(T));
 
         return reg.ctx().get<T>();
     }
@@ -169,7 +169,7 @@ inline ECS* Entity::get_ecs() { return ecs; }
 template <typename T, typename... Args>
 T& Entity::add(Args&&... args)
 {
-    if (!valid()) LOG_THROW("Entity::add<%s>: invalid entity", TYPE_NAME(T));
+    if (!valid()) LOG_THROW("Entity::add<{}>: invalid entity", TYPE_NAME(T));
 
     return ecs->reg.emplace<T>(handle, std::forward<Args>(args)...);
 }
@@ -191,9 +191,9 @@ bool Entity::has() const
 template <typename T>
 T& Entity::get()
 {
-    if (!valid()) LOG_THROW("Entity::get<%s>: invalid entity", TYPE_NAME(T));
+    if (!valid()) LOG_THROW("Entity::get<{}>: invalid entity", TYPE_NAME(T));
 
-    if (!ecs->reg.all_of<T>(handle)) LOG_THROW("Entity::get<%s>: component does not exist", TYPE_NAME(T));
+    if (!ecs->reg.all_of<T>(handle)) LOG_THROW("Entity::get<{}>: component does not exist", TYPE_NAME(T));
 
     return ecs->reg.get<T>(handle);
 }

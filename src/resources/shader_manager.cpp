@@ -6,7 +6,7 @@ namespace kine ::resource
 
 Shader& load_shader(const std::string& name, const std::string& vertex, const std::string& fragment)
 {
-    LOG_INFO("ShaderManager: Loading shader : %s", name.c_str());
+    LOG_INFO("ShaderManager: Loading shader : {}", name.c_str());
     if (shaders.contains(name)) return shaders[name];
 
     std::string vert_src = read_file(resource::get_path(vertex));

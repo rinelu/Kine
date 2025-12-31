@@ -9,12 +9,12 @@ Font& load_font(const std::string& name, const std::string& file, int pixel_heig
 {
     if (fonts.contains(name)) return fonts.at(name);
 
-    LOG_INFO("FontManager: Loading font %s", name.c_str());
+    LOG_INFO("FontManager: Loading font {}", name.c_str());
 
     FT_Face face{};
     const std::string path = resource::get_path(file);
 
-    if (FT_New_Face(library, path.c_str(), 0, &face)) LOG_THROW("FreeType: Failed to load font %s", path.c_str());
+    if (FT_New_Face(library, path.c_str(), 0, &face)) LOG_THROW("FreeType: Failed to load font {}", path.c_str());
 
     FT_Set_Pixel_Sizes(face, 0, pixel_height);
 
@@ -105,7 +105,7 @@ Font& get_font(const std::string& name)
 {
     if (fonts.contains(name)) return fonts.at(name);
 
-    LOG_ERROR("FontManager: Font not found %s", name.c_str());
+    LOG_ERROR("FontManager: Font not found {}", name.c_str());
     return fonts.begin()->second;
 }
 }  // namespace kine::resource

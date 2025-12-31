@@ -7,7 +7,7 @@ namespace kine::resource
 
 Texture2D& load_texture(const std::string& name, const std::string& file)
 {
-    LOG_INFO("TextureManager: Loading texture %s", name.c_str());
+    LOG_INFO("TextureManager: Loading texture {}", name.c_str());
 
     if (textures.contains(name)) return textures[name];
 
@@ -20,7 +20,7 @@ Texture2D& get_texture(const std::string& name)
 {
     if (textures.contains(name)) return textures.at(name);
 
-    LOG_ERROR("TextureManager: Failed to load texture %s", name.c_str());
+    LOG_ERROR("TextureManager: Failed to load texture {}", name.c_str());
     return *error_texture;
 }
 
@@ -37,7 +37,7 @@ Texture2D load_texture_file(const std::string& name, const std::string& path)
 
     if (!data)
     {
-        LOG_ERROR("TextureManager: Failed to load texture %s", path.c_str());
+        LOG_ERROR("TextureManager: Failed to load texture {}", path.c_str());
         return *error_texture;
     }
 
