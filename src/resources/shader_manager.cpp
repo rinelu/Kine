@@ -1,5 +1,5 @@
 #include <stdexcept>
-#include "resources/resource_manager.hpp"
+#include "kine/resources/resource_manager.hpp"
 
 namespace kine ::resource
 {

@@ -1,6 +1,6 @@
 #include <algorithm>
-#include "resources/resource_manager.hpp"
-#include "resources/texture_manager.hpp"
+#include "kine/resources/resource_manager.hpp"
+#include "kine/resources/texture_manager.hpp"
 
 namespace kine::resource
 {

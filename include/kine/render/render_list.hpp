@@ -1,6 +1,7 @@
 #pragma once
-#include <math.hpp>
 #include <vector>
+
+#include "kine/math.hpp"
 #include "render_command.hpp"
 
 namespace kine::render

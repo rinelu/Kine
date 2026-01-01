@@ -1,5 +1,5 @@
 #pragma once
-#include "GL.hpp"
+#include "kine/GL.hpp"
 
 namespace kine::window
 {

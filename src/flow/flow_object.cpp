@@ -1,4 +1,4 @@
-#include "flow/flow_object.hpp"
+#include "kine/flow/flow_object.hpp"
 
 namespace kine
 {

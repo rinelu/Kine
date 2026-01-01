@@ -1,6 +1,4 @@
-#include <kine.hpp>
-#include <math.hpp>
-#include "render/render_list.hpp"
+#include "kine/kine.hpp"
 
 using kine::ECS;
 using kine::FlowObject;

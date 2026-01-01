@@ -1,4 +1,4 @@
-#include "core/time.hpp"
+#include "kine/core/time.hpp"
 
 #include <algorithm>
 #include "GLFW/glfw3.h"

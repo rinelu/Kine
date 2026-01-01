@@ -1,5 +1,4 @@
-#include "kine.hpp"
-#include "io/input.hpp"
+#include "kine/kine.hpp"
 
 namespace kine
 {

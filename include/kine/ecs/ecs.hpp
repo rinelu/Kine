@@ -4,8 +4,8 @@
 
 #include <entt/entt.hpp>
 
-#include "detail.hpp"
-#include "log.hpp"
+#include "kine/detail.hpp"
+#include "kine/log.hpp"
 
 namespace kine
 {

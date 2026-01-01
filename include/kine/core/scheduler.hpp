@@ -4,7 +4,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "ecs/ecs.hpp"
+#include "kine/ecs/ecs.hpp"
 
 namespace kine::scheduler
 {

@@ -1,13 +1,13 @@
 #pragma once
-#include <math.hpp>
 #include <memory>
 #include <vector>
-#include "GL.hpp"
 
+#include "kine/GL.hpp"
+#include "kine/math.hpp"
+#include "kine/resources/resource_manager.hpp"
 #include "render_batcher.hpp"
 #include "render_command.hpp"
 #include "render_list.hpp"
-#include "resources/resource_manager.hpp"
 #include "texture2d.hpp"
 
 namespace kine

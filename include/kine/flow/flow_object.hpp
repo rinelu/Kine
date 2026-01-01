@@ -1,8 +1,9 @@
 #pragma once
-#include <ecs/ecs.hpp>
 #include <memory>
 #include <string>
 #include <vector>
+
+#include "kine/ecs/ecs.hpp"
 
 namespace kine
 {

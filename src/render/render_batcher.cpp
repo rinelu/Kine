@@ -1,7 +1,7 @@
-#include "render/render_batcher.hpp"
+#include "kine/render/render_batcher.hpp"
 
 #include <algorithm>
-#include "resources/texture_manager.hpp"
+#include "kine/resources/texture_manager.hpp"
 
 namespace kine::render_batcher
 {

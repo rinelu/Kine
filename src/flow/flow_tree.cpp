@@ -1,5 +1,5 @@
-#include "flow/flow_tree.hpp"
-#include "flow/flow_object.hpp"
+#include "kine/flow/flow_tree.hpp"
+#include "kine/flow/flow_object.hpp"
 
 namespace kine
 {

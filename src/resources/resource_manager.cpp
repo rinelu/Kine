@@ -1,8 +1,10 @@
-#include "resources/resource_manager.hpp"
+#include "kine/resources/resource_manager.hpp"
+
 #include <algorithm>
 #include <filesystem>
 #include <fstream>
-#include "resources/error_texture.hpp"
+
+#include "kine/resources/error_texture.hpp"
 
 #if defined(_WIN32)
 #    include <windows.h>

@@ -1,8 +1,10 @@
 #pragma once
+
 #include <glad/glad.h>
 #include <string>
 #include <unordered_map>
-#include "render/texture2d.hpp"
+
+#include "kine/render/texture2d.hpp"
 
 namespace kine::resource
 {

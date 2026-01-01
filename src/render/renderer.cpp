@@ -1,9 +1,10 @@
-#include "render/renderer.hpp"
+#include "kine/render/renderer.hpp"
+
 #include <algorithm>
-#include <memory>
-#include "render/renderer2d_shaders.hpp"
-#include "render/window.hpp"
-#include "resources/shader_manager.hpp"
+
+#include "kine/render/shaders.hpp"
+#include "kine/render/window.hpp"
+#include "kine/resources/shader_manager.hpp"
 
 #define GL_CHECK()                                              \
     do                                                          \

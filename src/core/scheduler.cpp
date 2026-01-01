@@ -1,4 +1,4 @@
-#include "core/scheduler.hpp"
+#include "kine/core/scheduler.hpp"
 
 namespace kine::scheduler
 {

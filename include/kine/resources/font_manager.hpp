@@ -2,7 +2,8 @@
 #include <glad/glad.h>
 #include <string>
 #include <unordered_map>
-#include "render/font.hpp"
+
+#include "kine/render/font.hpp"
 
 #include "ft2build.h"
 #include FT_FREETYPE_H

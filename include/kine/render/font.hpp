@@ -1,7 +1,7 @@
 #pragma once
 #include <unordered_map>
-#include "math.hpp"
-#include "render/texture2d.hpp"
+#include "kine/math.hpp"
+#include "kine/render/texture2d.hpp"
 
 namespace kine
 {

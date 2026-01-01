@@ -4,8 +4,8 @@
 #include <unordered_map>
 #include <vector>
 
-#include "math.hpp"
-#include "render/window.hpp"
+#include "kine/math.hpp"
+#include "kine/render/window.hpp"
 
 namespace kine
 {

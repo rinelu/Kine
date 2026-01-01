@@ -1,4 +1,5 @@
-#include "io/input.hpp"
+#include "kine/io/input.hpp"
+
 #include "GLFW/glfw3.h"
 
 namespace kine::input

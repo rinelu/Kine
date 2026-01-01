@@ -1,5 +1,5 @@
-#include "render/render_list.hpp"
-#include "log.hpp"
+#include "kine/render/render_list.hpp"
+#include "kine/log.hpp"
 
 namespace kine::render
 {

@@ -2,9 +2,10 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+
 #include "font_manager.hpp"
-#include "log.hpp"
-#include "resources/texture_manager.hpp"
+#include "kine/log.hpp"
+#include "kine/resources/texture_manager.hpp"
 #include "shader_manager.hpp"
 
 namespace kine::resource
