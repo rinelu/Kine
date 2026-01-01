@@ -1,7 +1,9 @@
 #include "render/renderer.hpp"
 #include <algorithm>
 #include <memory>
+#include "render/renderer2d_shaders.hpp"
 #include "render/window.hpp"
+#include "resources/shader_manager.hpp"
 
 #define GL_CHECK()                                              \
     do                                                          \
@@ -21,8 +23,7 @@ void create(Renderer2D* r)
 
 void init(Renderer2D* r)
 {
-    auto screen = resource::load_shader("screen", "shaders/screen.vert", "shaders/screen.frag");
-    r->shader = screen.program;
+    r->shader = resource::load_shader_str(screen_vert, screen_frag);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -31,8 +32,7 @@ void init(Renderer2D* r)
 
     if (r->virtual_enabled)
     {
-        auto blit = resource::load_shader("blit", "shaders/blit.vert", "shaders/blit.frag");
-        r->blit_shader = blit.program;
+        r->blit_shader = resource::load_shader_str(blit_vert, blit_frag);
 
         create_blit_objects(r);
         glUseProgram(r->blit_shader);
@@ -70,7 +70,7 @@ void shutdown(Renderer2D* r)
 void begin_frame(Renderer2D*) {}
 void render(Renderer2D* r)
 {
-    // begin_frame();
+    begin_frame(r);
 
     render_batcher::build(&r->batcher, render::get());
 
@@ -87,7 +87,7 @@ void end_frame(Renderer2D*) {}
 
 void set_virtual_resolution(Renderer2D* r, int width, int height)
 {
-    LOG_INFO("Renderer: enabling virtual resolution  {}x%u", width, height);
+    LOG_INFO("Renderer: enabling virtual resolution  {}x{}", width, height);
 
     if (r->virtual_enabled)
     {
@@ -245,6 +245,7 @@ void draw_batches_virtual(Renderer2D* r)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glUseProgram(r->shader);
+    glBindVertexArray(r->vao);
     float aspect = float(r->virtual_width) / float(r->virtual_height);
     glUniform1f(glGetUniformLocation(r->shader, "uAspect"), aspect);
 
@@ -279,6 +280,9 @@ void draw_batches_virtual(Renderer2D* r)
 
     glBindVertexArray(r->blit_vao);
     glDrawArrays(GL_TRIANGLES, 0, 6);
+
+    set_texture(r, 0);
+    glEnable(GL_DEPTH_TEST);
 }
 
 void create_gl_objects(Renderer2D* r)
@@ -546,3 +550,5 @@ void draw_text(Renderer2D* r, const RenderCommand* cmd)
 }
 
 }  // namespace kine::renderer2d
+
+#undef GL_CHECK

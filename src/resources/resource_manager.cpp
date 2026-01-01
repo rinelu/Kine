@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <filesystem>
 #include <fstream>
+#include "resources/error_texture.hpp"
 
 #if defined(_WIN32)
 #    include <windows.h>
@@ -56,7 +57,8 @@ void init()
 
     LOG_INFO("ResourceManager: Indexed {} files", file_index.size());
 
-    error_texture = &load_texture("error", "error.png");
+    // error_texture = &load_texture("error", "error.png");
+    error_texture = &load_embedded_texture("error", error_compressed_data, error_compressed_size);
     FT_Init_FreeType(&library);
 }
 

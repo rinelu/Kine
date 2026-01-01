@@ -4,16 +4,10 @@
 namespace kine ::resource
 {
 
-Shader& load_shader(const std::string& name, const std::string& vertex, const std::string& fragment)
+GLuint load_shader_str(const std::string& vert, const std::string& frag)
 {
-    LOG_INFO("ShaderManager: Loading shader : {}", name);
-    if (shaders.contains(name)) return shaders[name];
-
-    std::string vert_src = read_file(resource::get_path(vertex));
-    std::string frag_src = read_file(resource::get_path(fragment));
-
-    GLuint vs = compile_shader(GL_VERTEX_SHADER, vert_src);
-    GLuint fs = compile_shader(GL_FRAGMENT_SHADER, frag_src);
+    GLuint vs = compile_shader(GL_VERTEX_SHADER, vert);
+    GLuint fs = compile_shader(GL_FRAGMENT_SHADER, frag);
 
     GLuint program = glCreateProgram();
     glAttachShader(program, vs);
@@ -22,6 +16,19 @@ Shader& load_shader(const std::string& name, const std::string& vertex, const st
 
     glDeleteShader(vs);
     glDeleteShader(fs);
+
+    return program;
+}
+
+Shader& load_shader(const std::string& name, const std::string& vertex, const std::string& fragment)
+{
+    LOG_INFO("ShaderManager: Loading shader {}", name);
+    if (shaders.contains(name)) return shaders[name];
+
+    std::string vert_src = read_file(resource::get_path(vertex));
+    std::string frag_src = read_file(resource::get_path(fragment));
+
+    GLuint program = load_shader_str(vert_src, frag_src);
 
     shaders[name] = {program};
     return shaders[name];
