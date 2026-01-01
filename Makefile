@@ -29,9 +29,9 @@ STB_URL := https://raw.githubusercontent.com/nothings/stb/master/stb_image.h
 MINIAUDIO_URL := https://raw.githubusercontent.com/mackron/miniaudio/master/miniaudio.h
 
 ifeq (, $(shell which curl 2>/dev/null || true))
-    DOWNLOAD = wget -q -O -
+    DOWNLOAD = wget -O -
 else
-    DOWNLOAD = curl -sL
+    DOWNLOAD = curl -L
 endif
 
 all: build run
@@ -107,14 +107,13 @@ deps: $(EXTERNAL_DIR)
 		rm -rf "$$tmp"; \
 	else echo "GLFW already present"; fi
 
-
-	@if [ ! -f $(EXTERNAL_DIR)/glm/glm.hpp ]; then \
+	@if [ ! -f $(EXTERNAL_DIR)/glm/glm/glm.hpp ]; then \
 		echo "Installing GLM (header-only)"; \
 		tmp=$$(mktemp -d); \
 		$(DOWNLOAD) "$(GLM_URL)" > "$$tmp/glm.zip"; \
 		unzip -q "$$tmp/glm.zip" -d "$$tmp"; \
 		mkdir -p $(EXTERNAL_DIR)/glm/glm; \
-		mv "$$tmp"/glm $(EXTERNAL_DIR)/glm || mv "$$tmp"/glm-* $(EXTERNAL_DIR)/glm; \
+		mv "$$tmp"/glm/glm $(EXTERNAL_DIR)/glm; \
 		rm -rf "$$tmp"; \
 	else echo "GLM already present"; fi
 
