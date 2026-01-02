@@ -1,6 +1,9 @@
 name: Kine Build
-
-on: [push, pull_request]
+on: 
+  push:
+    branches:
+      - master
+  pull_request:
 
 jobs:
   macos:
@@ -58,7 +61,7 @@ jobs:
 
       - name: Build project
         run: |
-          if [ "${{ matrix.compiler }}" = "clang" ]; then
+          if [ "${{ matrix.cc }}" = "clang" ]; then
             export CC=clang
             export CXX=clang++
           fi

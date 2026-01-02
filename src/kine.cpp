@@ -41,8 +41,8 @@ void update()
     flow_tree->update(dt);
     flow_tree->fixed_update(time::fixed_dt);
 
-    scheduler::update(flow_tree->ecs(), dt, time::alpha);
-    scheduler::fixed_update(flow_tree->ecs(), time::accumulator, time::fixed_dt, time::alpha);
+    scheduler::update(flow_tree->ecs, dt, time::alpha);
+    scheduler::fixed_update(flow_tree->ecs, time::accumulator, time::fixed_dt, time::alpha);
 }
 
 void render_frame() { renderer2d::render(&renderer); }

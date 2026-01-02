@@ -1,0 +1,12 @@
+Version 1.1.0
+
+- Change GPLv3 to MIT
+- Fix entity lifetime bugs (prevent double creation, ensure proper destruction)
+- Implement enable/disable and pause semantics
+- Add safe recursive destruction and queue_free support
+- Implement node traversal (path lookup, type search)
+- Add group/tag system for nodes
+- Support reparenting and child removal
+- Ensure deterministic recursive update order
+- Add semantic engine version header (MAJOR.MINOR.PATCH)
+- Add a doc in `flow` with duck.ai help

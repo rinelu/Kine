@@ -194,10 +194,11 @@ int main()
     kine::create(SCREEN_WIDTH, SCREEN_HEIGHT, "Kine - Flappy Bird");
 
     auto* flow_tree = kine::flow_tree;
-    auto& ecs = flow_tree->ecs();
+    auto& ecs = flow_tree->ecs;
     auto* tree = flow_tree->create<FlowObject>("root");
 
-    auto* bird = tree->add_child<Bird>("Bird");
+    auto* bird = tree->add_child<Bird>();
+    bird->name = "Bird";
 
     float next_pipe_x = SCREEN_WIDTH;
     for (int i = 0; i < PIPE_COUNT; ++i)
@@ -205,7 +206,8 @@ int main()
         float y = random_range(150.0f, 450.0f);
         float x = SCREEN_WIDTH + (i * PIPE_SPACING);
 
-        tree->add_child<Pipe>("Pipe " + std::to_string(i), vec2(x, y));
+        auto* pipe = tree->add_child<Pipe>(vec2(x, y));
+        pipe->name = "Pipe " + std::to_string(i);
     }
 
     flow_tree->finalize();
