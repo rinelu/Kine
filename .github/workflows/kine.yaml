@@ -58,7 +58,7 @@ jobs:
 
       - name: Build project
         run: |
-          if [ "${{ matrix.compiler }}" = "clang" ]; then
+          if [ "${{ matrix.cc }}" = "clang" ]; then
             export CC=clang
             export CXX=clang++
           fi
