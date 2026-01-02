@@ -1,18 +1,17 @@
 # Kine
 
 [![Build](https://github.com/rhmvl/Kine/actions/workflows/kine.yaml/badge.svg)](https://github.com/rhmvl/Kine/actions/workflows/kine.yaml)
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 ![C++](https://img.shields.io/badge/C%2B%2B-20-blue)
 
 A 2D engine written in C++.
 
-This is a personal / learning project. It is not meant to be feature-complete, stable, or especially user-friendly.
+This is a personal / learning project. It's not meant to be feature-complete, or stable.
 
 ## Building
 
 First, fetch and build dependencies:
-```
-```
+
 ```bash
 make deps
 ```
@@ -65,15 +64,13 @@ All third-party libraries are downloaded into `./external/`:
 - `src/` – engine implementation  
 - `examples/` – sample projects using the engine  
 
-The main entry point is `include/kine.hpp`.
+The main entry point is `include/kine/kine.hpp`.
 
 APIs are not stable and may change without warning.
 
 ## License
 
-GPLv3.
-
-Do whatever you want with it, but keep it open source.
+MIT.
 
 ## Status
 
