@@ -132,6 +132,7 @@ target_include_directories(Kine PUBLIC
     ${EXTERNAL}/glm
     ${EXTERNAL}/entt
     ${EXTERNAL}/stb
+    ${EXTERNAL}/glfw/include
     ${EXTERNAL}/miniaudio
     ${EXTERNAL}/freetype/include
     ${EXTERNAL}/glad/include
