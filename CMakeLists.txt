@@ -117,8 +117,7 @@ target_link_libraries(freetype PUBLIC
 )
 
 # GLFW
-set(GLFW_SOURCE_DIR "${EXTERNAL}/glfw")
-add_subdirectory(${GLFW_SOURCE_DIR})
+add_subdirectory(${EXTERNAL}/glfw)
 
 # Kine
 file(GLOB_RECURSE KINE_SRC ${CMAKE_SOURCE_DIR}/src/*.cpp)

@@ -9,7 +9,6 @@ CMakeFiles/
 CTestTestfile.cmake
 cmake_install.cmake
 CTestTestfile.cmake
-*.cmake
 
 shaders/*.spv
 shaders/*.bin
