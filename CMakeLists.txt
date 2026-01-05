@@ -116,6 +116,9 @@ target_link_libraries(freetype PUBLIC
     brotlicommon
 )
 
+# GLFW
+add_subdirectory(${EXTERNAL}/glfw)
+
 # Kine
 file(GLOB_RECURSE KINE_SRC ${CMAKE_SOURCE_DIR}/src/*.cpp)
 
@@ -134,13 +137,11 @@ target_include_directories(Kine PUBLIC
     ${EXTERNAL}/glad/include
 )
 
-target_include_directories(Kine PRIVATE ${EXTERNAL}/glfw/include)
-
 # Link everything
 target_link_libraries(Kine PRIVATE
     imgui
     freetype
-    ${EXTERNAL}/glfw/lib/libglfw3.a
+    glfw
     # brotlidec
     # brotlicommon
     png
