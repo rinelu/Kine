@@ -9,23 +9,11 @@ A 2D engine written in C++.
 This is a personal / learning project. It's not meant to be feature-complete, or stable.
 
 ## Building
-
-First, fetch and build dependencies:
-
-```bash
-make deps
-```
-
-Then build the engine and examples:
+Build the engine and examples:
 
 ```bash
-make build
-```
-
-Run the main target:
-
-```bash
-make run
+cmake -B build
+cmake --build build
 ```
 
 ## Examples
@@ -49,8 +37,7 @@ All third-party libraries are downloaded into `./external/`:
 - EnTT (ECS)
 - FreeType (fonts)
 - ImGui (debug UI)
-- Lua + sol2 (scripting)
-- stb_image, miniaudio, nlohmann/json
+- stb_image, miniaudio
 
 ## Compiler Requirements
 
@@ -76,5 +63,4 @@ MIT.
 
 Not stable.
 Not finished.
-Probably never will be.
 

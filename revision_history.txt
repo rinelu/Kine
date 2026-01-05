@@ -2,6 +2,8 @@
 
 - Restructure external libraries and fix include/link issues
 - Make `external` as part of the repo
+- Remove Makefile
+- Update README and kine.yaml
 
 # Version 1.1.0
 
