@@ -117,6 +117,7 @@ target_link_libraries(freetype PUBLIC
 )
 
 # GLFW
+list(APPEND CMAKE_MODULE_PATH "${EXTERNAL}/glfw/CMake")
 add_subdirectory(${EXTERNAL}/glfw)
 
 # Kine
