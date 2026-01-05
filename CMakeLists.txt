@@ -1,135 +1,152 @@
 cmake_minimum_required(VERSION 3.20)
 project(Kine LANGUAGES C CXX)
-
-if(CMAKE_BUILD_TYPE STREQUAL "Release")
-    set(BUILD_SHARED_LIBS OFF)
-    message(STATUS "Release build: STATIC linking enabled")
-else()
-    set(BUILD_SHARED_LIBS ON)
-    message(STATUS "Debug build: DYNAMIC linking enabled")
-endif()
-
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-set(EXTERNAL_DIR ${CMAKE_SOURCE_DIR}/external)
-
-# GLFW
-set(GLFW_DIR         ${EXTERNAL_DIR}/glfw)
-set(GLFW_INCLUDE_DIR ${GLFW_DIR}/include)
-set(GLFW_LIB_DIR     ${GLFW_DIR}/lib)
-
-# FreeType
-set(FT_DIR         ${EXTERNAL_DIR}/freetype)
-set(FT_INCLUDE_DIR ${FT_DIR}/include)
-set(FT_LIB_DIR     ${FT_DIR}/lib)
+set(EXTERNAL ${CMAKE_SOURCE_DIR}/external)
 
 # Glad
-set(GLAD_INCLUDE_DIR ${EXTERNAL_DIR}/glad/include)
-set(GLAD_SRC ${EXTERNAL_DIR}/glad/src/glad.c)
+add_library(glad OBJECT ${EXTERNAL}/glad/src/glad.c)
+target_include_directories(glad PUBLIC ${EXTERNAL}/glad/include)
 
-# ImGui (header-only)
-set(IMGUI_INCLUDE_DIR      ${EXTERNAL_DIR}/imgui)
-set(RLIMGUI_INCLUDE_DIR    ${EXTERNAL_DIR}/rlimgui)
+# Zlib
+file(GLOB ZLIB_SRC ${EXTERNAL}/zlib/*.c)
+add_library(zlib STATIC ${ZLIB_SRC})
+target_include_directories(zlib PRIVATE ${EXTERNAL}/zlib)
 
-# Header-only libs
-set(GLM_INCLUDE_DIR        ${EXTERNAL_DIR}/glm)
-set(ENTT_INCLUDE_DIR       ${EXTERNAL_DIR}/entt)
-set(JSON_INCLUDE_DIR       ${EXTERNAL_DIR}/json)
-set(STB_INCLUDE_DIR        ${EXTERNAL_DIR}/stb)
-set(MINIAUDIO_INCLUDE_DIR  ${EXTERNAL_DIR}/miniaudio)
-set(SOL2_INCLUDE_DIR       ${EXTERNAL_DIR}/sol2)
-set(LUA_INCLUDE_DIR        ${EXTERNAL_DIR}/lua/include)
-set(LUA_LIB_DIR            ${EXTERNAL_DIR}/lua/lib)
+# libpng
+file(GLOB PNG_SRC ${EXTERNAL}/libpng/*.c)
+add_library(png STATIC ${PNG_SRC})
+target_include_directories(png PUBLIC ${EXTERNAL}/libpng)
+target_link_libraries(png PUBLIC zlib)
 
 # Brotli
-find_library(BROTLI_DEC_LIB brotlidec REQUIRED)
-find_library(BROTLI_COMMON_LIB brotlicommon REQUIRED)
+file(GLOB_RECURSE BROTLI_COMMON_SRC ${EXTERNAL}/brotli/common/*.c)
+file(GLOB_RECURSE BROTLI_DEC_SRC ${EXTERNAL}/brotli/dec/*.c)
 
-add_library(Brotli::brotlidec UNKNOWN IMPORTED)
-set_target_properties(Brotli::brotlidec PROPERTIES
-    IMPORTED_LOCATION "${BROTLI_DEC_LIB}"
-    INTERFACE_INCLUDE_DIRECTORIES "${BROTLI_INCLUDE_DIR}"
+add_library(brotlicommon STATIC ${BROTLI_COMMON_SRC})
+add_library(brotlidec STATIC ${BROTLI_DEC_SRC})
+
+target_include_directories(brotlicommon PUBLIC ${EXTERNAL}/brotli/include)
+target_include_directories(brotlidec PUBLIC ${EXTERNAL}/brotli/include)
+target_link_libraries(brotlidec PUBLIC brotlicommon)
+
+# ImGui
+file(GLOB IMGUI_SRC ${EXTERNAL}/imgui/imgui*.cpp)
+add_library(imgui STATIC ${IMGUI_SRC})
+target_include_directories(imgui PUBLIC ${EXTERNAL}/imgui)
+
+# FreeType
+set(FREETYPE_DIR ${EXTERNAL}/freetype)
+add_library(freetype STATIC)
+target_include_directories(freetype PUBLIC
+    ${FREETYPE_DIR}/include
+    ${EXTERNAL}/zlib)
+target_compile_definitions(freetype PRIVATE
+    FT2_BUILD_LIBRARY
+    FT_CONFIG_OPTION_SYSTEM_ZLIB)
+
+set(FT_BASE
+    ${FREETYPE_DIR}/src/base/ftbase.c
+    ${FREETYPE_DIR}/src/base/ftinit.c
+    ${FREETYPE_DIR}/src/base/ftsystem.c
+    ${FREETYPE_DIR}/src/base/ftbitmap.c
+    ${FREETYPE_DIR}/src/base/ftdebug.c
+    ${FREETYPE_DIR}/src/base/ftmm.c
+)
+set(FT_COMP
+    ${FREETYPE_DIR}/src/gzip/ftgzip.c
+    ${FREETYPE_DIR}/src/lzw/ftlzw.c)
+set(FT_RENDER
+    ${FREETYPE_DIR}/src/raster/raster.c
+    ${FREETYPE_DIR}/src/smooth/smooth.c
+    ${FREETYPE_DIR}/src/sdf/sdf.c
+    ${FREETYPE_DIR}/src/svg/svg.c
+)
+set(FT_DRIVERS
+    ${FREETYPE_DIR}/src/autofit/autofit.c
+    ${FREETYPE_DIR}/src/truetype/truetype.c
+    ${FREETYPE_DIR}/src/type1/type1.c
+    ${FREETYPE_DIR}/src/type42/type42.c
+    ${FREETYPE_DIR}/src/cff/cff.c
+    ${FREETYPE_DIR}/src/cid/type1cid.c
+    ${FREETYPE_DIR}/src/pfr/pfr.c
+    ${FREETYPE_DIR}/src/winfonts/winfnt.c
+    ${FREETYPE_DIR}/src/pcf/pcf.c
+    ${FREETYPE_DIR}/src/bdf/bdf.c
+)
+set(FT_HELPERS
+    ${FREETYPE_DIR}/src/psaux/psaux.c
+    ${FREETYPE_DIR}/src/psnames/psnames.c
+    ${FREETYPE_DIR}/src/pshinter/pshinter.c
+    ${FREETYPE_DIR}/src/sfnt/sfnt.c
+)
+set(FT_MODULES
+    ${FREETYPE_DIR}/src/autofit/autofit.c
+    ${FREETYPE_DIR}/src/raster/raster.c
+    ${FREETYPE_DIR}/src/smooth/smooth.c
+    ${FREETYPE_DIR}/src/truetype/truetype.c
+    ${FREETYPE_DIR}/src/type1/type1.c
+    ${FREETYPE_DIR}/src/cff/cff.c
+    ${FREETYPE_DIR}/src/sfnt/sfnt.c
+    ${FREETYPE_DIR}/src/psaux/psaux.c
+    ${FREETYPE_DIR}/src/psnames/psnames.c
+)
+set(FT_OPTIONAL
+    ${FREETYPE_DIR}/src/sfnt/sfwoff.c
+    ${FREETYPE_DIR}/src/sfnt/sfwoff2.c
+    ${FREETYPE_DIR}/src/sfnt/woff2tags.c
+    ${FREETYPE_DIR}/src/sfnt/pngshim.c
 )
 
-add_library(Brotli::brotlicommon UNKNOWN IMPORTED)
-set_target_properties(Brotli::brotlicommon PROPERTIES
-    IMPORTED_LOCATION "${BROTLI_COMMON_LIB}"
-    INTERFACE_INCLUDE_DIRECTORIES "${BROTLI_INCLUDE_DIR}"
+target_sources(freetype PRIVATE
+    ${FT_BASE}
+    ${FT_COMP}
+    ${FT_RENDER}
+    ${FT_DRIVERS}
+    ${FT_HELPERS}
+    ${FT_OPTIONAL}
 )
 
-include_directories(
-    ${GLAD_INCLUDE_DIR}
-    ${GLFW_INCLUDE_DIR}
-    ${FT_INCLUDE_DIR}
-    ${IMGUI_INCLUDE_DIR}
-    ${RLIMGUI_INCLUDE_DIR}
-    ${GLM_INCLUDE_DIR}
-    ${ENTT_INCLUDE_DIR}
-    ${JSON_INCLUDE_DIR}
-    ${STB_INCLUDE_DIR}
-    ${MINIAUDIO_INCLUDE_DIR}
-    ${SOL2_INCLUDE_DIR}
-    ${LUA_INCLUDE_DIR}
+target_link_libraries(freetype PUBLIC
+    png
+    zlib
+    brotlidec
+    brotlicommon
+)
 
+# Kine
+file(GLOB_RECURSE KINE_SRC ${CMAKE_SOURCE_DIR}/src/*.cpp)
+
+add_library(Kine STATIC
+    ${KINE_SRC}
+    $<TARGET_OBJECTS:glad>
+)
+
+target_include_directories(Kine PUBLIC
     ${CMAKE_SOURCE_DIR}/include
+    ${EXTERNAL}/glm
+    ${EXTERNAL}/entt
+    ${EXTERNAL}/stb
+    ${EXTERNAL}/miniaudio
+    ${EXTERNAL}/freetype/include
+    ${EXTERNAL}/glad/include
 )
 
-file(GLOB_RECURSE KINE_SOURCES
-    "${CMAKE_SOURCE_DIR}/src/*.cpp"
-    "${CMAKE_SOURCE_DIR}/src/**/*.cpp"
-    "${CMAKE_SOURCE_DIR}/src/**/**/*.cpp"
-)
+target_include_directories(Kine PRIVATE ${EXTERNAL}/glfw/include)
 
-add_library(glad OBJECT ${GLAD_SRC})
-set_source_files_properties(${GLAD_SRC} PROPERTIES LANGUAGE C)
-set_target_properties(glad PROPERTIES LINKER_LANGUAGE C)
-set_target_properties(glad PROPERTIES
-    POSITION_INDEPENDENT_CODE ON
-)
-add_library(Kine ${KINE_SOURCES} $<TARGET_OBJECTS:glad>)
-set_target_properties(Kine PROPERTIES
-    POSITION_INDEPENDENT_CODE ON
-)
-
-target_include_directories(Kine PRIVATE
-    ${GLFW_INCLUDE_DIR}
-    ${ENTT_INCLUDE_DIR}
-    ${FT_INCLUDE_DIR}
-    "${CMAKE_SOURCE_DIR}/src"
-)
-
-target_link_directories(Kine PRIVATE
-    ${GLFW_LIB_DIR}
-    ${FT_LIB_DIR}
-    ${LUA_LIB_DIR}
-)
-
-target_sources(Kine PRIVATE $<TARGET_OBJECTS:glad>)
-
-find_package(ZLIB REQUIRED)
-find_package(PNG REQUIRED)
+# Link everything
 target_link_libraries(Kine PRIVATE
-    glad
-    ${GLFW_LIB_DIR}/libglfw3.a
-    ${FT_LIB_DIR}/libfreetype.a
-    Brotli::brotlidec
-    Brotli::brotlicommon
-    ZLIB::ZLIB
-    PNG::PNG
-    lua
+    imgui
+    freetype
+    ${EXTERNAL}/glfw/lib/libglfw3.a
+    # brotlidec
+    # brotlicommon
+    png
 )
 
-if(WIN32 AND CMAKE_BUILD_TYPE STREQUAL "Release")
-    target_link_options(Kine PRIVATE
-        -static
-        -static-libgcc
-        -static-libstdc++
-    )
-endif()
-
-# Linux system libs
+# Platform libs
 if(UNIX AND NOT APPLE)
     target_link_libraries(Kine PRIVATE
         pthread
@@ -138,8 +155,6 @@ if(UNIX AND NOT APPLE)
     )
 endif()
 
-
-# macOS
 if(APPLE)
     target_link_libraries(Kine PRIVATE
         "-framework Cocoa"
@@ -149,33 +164,19 @@ if(APPLE)
     )
 endif()
 
-set_target_properties(Kine PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin
-)
-
 if(MSVC)
-    target_compile_options(Kine PRIVATE
-        /W4
-        /WX
-        /permissive-
-        /Zc:__cplusplus
-    )
+    target_compile_options(Kine PRIVATE /W4 /WX)
 else()
     target_compile_options(Kine PRIVATE
-        -Wall
-        -Wextra
-        -Werror
+        -Wall -Wextra -Werror
         -Wshadow
         -Wnon-virtual-dtor
         -Wcast-align
-        -Wunused
-        -Woverloaded-virtual
         -Wnull-dereference
         -Wdouble-promotion
         -Wformat=2
     )
 endif()
-
 
 file(GLOB EXAMPLE_DIRS "${CMAKE_SOURCE_DIR}/examples/*")
 
@@ -183,18 +184,13 @@ foreach(example_dir ${EXAMPLE_DIRS})
     if(IS_DIRECTORY ${example_dir})
         get_filename_component(example_name ${example_dir} NAME)
 
-        file(GLOB_RECURSE EXAMPLE_SOURCES
-            "${example_dir}/*.cpp"
-        )
+        file(GLOB_RECURSE EXAMPLE_SOURCES "${example_dir}/*.cpp")
 
         if(EXAMPLE_SOURCES)
             add_executable(${example_name} ${EXAMPLE_SOURCES})
-
             target_link_libraries(${example_name} PRIVATE Kine)
-
             set_target_properties(${example_name} PROPERTIES
-                RUNTIME_OUTPUT_DIRECTORY "${example_dir}/bin"
-            )
+                RUNTIME_OUTPUT_DIRECTORY "${example_dir}/bin")
 
             if(EXISTS "${example_dir}/assets")
                 add_custom_command(
