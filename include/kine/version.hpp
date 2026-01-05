@@ -40,7 +40,7 @@ struct Version
     }
 };
 
-inline constexpr Version ENGINE_VERSION{1, 1, 0};
+inline constexpr Version ENGINE_VERSION{1, 2, 0};
 
 inline constexpr std::uint32_t ENGINE_VERSION_MAJOR = ENGINE_VERSION.major;
 inline constexpr std::uint32_t ENGINE_VERSION_MINOR = ENGINE_VERSION.minor;

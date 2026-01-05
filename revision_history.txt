@@ -1,4 +1,11 @@
-Version 1.1.0
+# Version 1.2.0
+
+- Restructure external libraries and fix include/link issues
+- Make `external` as part of the repo
+- Remove Makefile
+- Update README and kine.yaml
+
+# Version 1.1.0
 
 - Change GPLv3 to MIT
 - Fix entity lifetime bugs (prevent double creation, ensure proper destruction)
