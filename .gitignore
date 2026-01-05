@@ -11,8 +11,6 @@ cmake_install.cmake
 CTestTestfile.cmake
 *.cmake
 
-external/*
-
 shaders/*.spv
 shaders/*.bin
 shaders/**/compiled/
